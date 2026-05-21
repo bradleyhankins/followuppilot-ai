@@ -14,6 +14,10 @@ It helps sales representatives and managers turn customer context into:
 - Multi-touch follow-up sequences
 - Downloadable follow-up plans
 
+## Live Demo 
+
+[Launch FollowUpPilot AI](https://followuppilot-ai.streamlit.app/)
+
 ## Why this project exists
 
 Small and mid-sized home-service businesses often lose revenue because follow-up is inconsistent, CRM notes are incomplete, and reps do not always know the best next step after a customer interaction.
