@@ -160,7 +160,7 @@ with st.form("followup_form"):
     col1, col2 = st.columns(2)
     with col1:
         customer = st.text_input("Customer Name", placeholder="Example: Heather")
-        company = st.text_input("Company Name", placeholder="Example: Ridgeline Roofing & Restoration")
+        company = st.text_input("Company Name", placeholder="Example: Summit Home Services")
         project_type = st.selectbox("Project Type", ["Roof Replacement", "Roof Repair", "Siding", "Gutters", "Windows", "HVAC", "Pest Control", "General Home Service", "Other"])
         lead_status = st.selectbox("Lead Status", ["New Lead", "Inspection Scheduled", "Inspection Completed", "Estimate Presented", "Proposal Sent", "Needs Follow-Up", "Verbal Yes / Pending Signature", "Closed Lost"])
     with col2:
