@@ -98,3 +98,76 @@ py -m streamlit run app.py
 
 Bradley Hankins  
 Operations & Revenue Leader | Technology & AI Workflow Integration
+
+## Case Study
+
+### Problem
+
+Field-sales and home-service teams often lose opportunities because follow-up is inconsistent, CRM notes are incomplete, and sales representatives do not always have a clear next step after a customer interaction.
+
+Common issues include:
+
+- Slow follow-up after estimates or proposals
+- Inconsistent text and email quality
+- Weak CRM documentation
+- Missed objection-handling opportunities
+- Lack of manager visibility into next-step discipline
+- Reps relying on memory instead of a repeatable process
+
+### Solution
+
+FollowUpPilot AI was built as a lightweight AI-assisted workflow tool that helps sales representatives and managers create stronger follow-up communication and cleaner CRM documentation.
+
+The app allows users to enter basic customer and project context, then generates:
+
+- Follow-up priority level
+- Recommended follow-up timing
+- Customer text message
+- Customer email
+- CRM-ready note
+- Call script
+- Objection guidance
+- Manager coaching note
+- Multi-touch follow-up sequence
+- Downloadable follow-up plan
+
+### My Role
+
+I designed and built this project from concept to deployment, including:
+
+- Defining the business workflow problem
+- Mapping the sales follow-up process
+- Designing the input structure
+- Building the Streamlit app
+- Writing the rules-based AI-style generation logic
+- Creating downloadable Markdown reports
+- Preparing fictional sample scenarios for public portfolio use
+- Publishing the project on GitHub
+- Deploying the live demo
+
+### Business Value
+
+FollowUpPilot AI helps small and mid-sized businesses improve sales execution by creating a more consistent follow-up process.
+
+The tool can help teams:
+
+- Respond faster after customer interactions
+- Improve text and email quality
+- Standardize CRM notes
+- Coach reps on objections
+- Reduce missed follow-up opportunities
+- Create a repeatable customer communication workflow
+- Turn sales context into action-ready communication
+
+### Future Improvements
+
+Planned future improvements include:
+
+- OpenAI API integration for dynamic message generation
+- CRM export templates
+- Follow-up sequence scheduling
+- Saved customer profiles
+- Team-level follow-up reporting
+- Rep performance tracking
+- Integration with lead status CSV uploads
+- PDF follow-up plan downloads
