@@ -24,9 +24,9 @@ FollowUpPilot AI is designed for:
 - Revenue operations teams
 - Teams that need stronger CRM discipline and follow-up consistency
 
-## Current Version: v2.2
+## Current Version: v2.3
 
-FollowUpPilot AI v2.2 includes:
+FollowUpPilot AI v2.3 includes:
 
 - Portfolio Hub-style executive design
 - Public-safe fictional sample scenarios
@@ -42,6 +42,8 @@ FollowUpPilot AI v2.2 includes:
 - Follow-up intensity selector
 - Communication channel selector
 - Expanded tone selector
+- Copy Center for text, email, voicemail, CRM note, and coaching note
+- Follow-up timeline
 - Customer text message generator
 - Customer email generator
 - Voicemail script generator
@@ -49,7 +51,6 @@ FollowUpPilot AI v2.2 includes:
 - Call script generator
 - Objection guidance
 - Manager coaching note
-- Multi-touch follow-up sequence
 - Downloadable Markdown follow-up plan
 - Privacy note
 
@@ -98,39 +99,15 @@ The app generates:
 2. Load the “Price Objection” sample scenario.
 3. Generate the follow-up plan.
 4. Review the follow-up priority, lead temperature, deal risk, and next best action.
-5. Review the text message, email, voicemail script, CRM note, and call script.
+5. Review the Copy Center and follow-up timeline.
 6. Review the objection guidance, manager coaching note, and follow-up sequence.
 7. Download the follow-up plan.
 
 ## Screenshots
 
-### Customer Follow-Up Builder
+### Recommendation, Copy Center, and Timeline
 
-![FollowUpPilot AI Follow-Up Builder](screenshots/followup-builder.svg)
-
-### Follow-Up Recommendation
-
-![FollowUpPilot AI Follow-Up Recommendation](screenshots/followup-recommendation.svg)
-
-### Text, Email, and Voicemail Output
-
-![FollowUpPilot AI Text Email Voicemail Output](screenshots/text-email-output.svg)
-
-### CRM Note and Call Script
-
-![FollowUpPilot AI CRM Note and Call Script](screenshots/crm-call-script.svg)
-
-### Objection Guidance and Manager Coaching
-
-![FollowUpPilot AI Objection Guidance and Manager Coaching](screenshots/objection-manager-coaching.svg)
-
-### Follow-Up Sequence
-
-![FollowUpPilot AI Follow-Up Sequence](screenshots/followup-sequence.svg)
-
-### Downloadable Follow-Up Plan
-
-![FollowUpPilot AI Downloadable Follow-Up Plan](screenshots/download-followup-plan.svg)
+![FollowUpPilot AI Copy Center and Timeline](screenshots/copy-center-timeline.svg)
 
 ## Tech Stack
 
