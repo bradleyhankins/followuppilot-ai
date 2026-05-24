@@ -96,31 +96,31 @@ The app generates:
 
 ### Customer Follow-Up Builder
 
-![FollowUpPilot AI Follow-Up Builder](screenshots/followup-builder.png)
+![FollowUpPilot AI Follow-Up Builder](screenshots/followup-builder.svg)
 
 ### Follow-Up Recommendation
 
-![FollowUpPilot AI Follow-Up Recommendation](screenshots/followup-recommendation.png)
+![FollowUpPilot AI Follow-Up Recommendation](screenshots/followup-recommendation.svg)
 
 ### Text, Email, and Voicemail Output
 
-![FollowUpPilot AI Text Email Voicemail Output](screenshots/text-email-output.png)
+![FollowUpPilot AI Text Email Voicemail Output](screenshots/text-email-output.svg)
 
 ### CRM Note and Call Script
 
-![FollowUpPilot AI CRM Note and Call Script](screenshots/crm-call-script.png)
+![FollowUpPilot AI CRM Note and Call Script](screenshots/crm-call-script.svg)
 
 ### Objection Guidance and Manager Coaching
 
-![FollowUpPilot AI Objection Guidance and Manager Coaching](screenshots/objection-manager-coaching.png)
+![FollowUpPilot AI Objection Guidance and Manager Coaching](screenshots/objection-manager-coaching.svg)
 
 ### Follow-Up Sequence
 
-![FollowUpPilot AI Follow-Up Sequence](screenshots/followup-sequence.png)
+![FollowUpPilot AI Follow-Up Sequence](screenshots/followup-sequence.svg)
 
 ### Downloadable Follow-Up Plan
 
-![FollowUpPilot AI Downloadable Follow-Up Plan](screenshots/download-followup-plan.png)
+![FollowUpPilot AI Downloadable Follow-Up Plan](screenshots/download-followup-plan.svg)
 
 ## Tech Stack
 
