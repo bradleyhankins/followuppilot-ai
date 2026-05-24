@@ -92,6 +92,16 @@ The app generates:
 - Suggested follow-up sequence
 - Downloadable Markdown follow-up plan
 
+## Suggested Test Flow
+
+1. Launch the live demo.
+2. Load the “Price Objection” sample scenario.
+3. Generate the follow-up plan.
+4. Review the follow-up priority, lead temperature, deal risk, and next best action.
+5. Review the text message, email, voicemail script, CRM note, and call script.
+6. Review the objection guidance, manager coaching note, and follow-up sequence.
+7. Download the follow-up plan.
+
 ## Screenshots
 
 ### Customer Follow-Up Builder
@@ -131,16 +141,16 @@ The app generates:
 - GitHub
 - Streamlit Community Cloud
 
-## Public Demo Note
-
-All sample data, names, companies, and scenarios used in this project are fictional and created for public portfolio demonstration purposes.
-
 ## Run Locally
 
 ```bash
 py -m pip install -r requirements.txt
 py -m streamlit run app.py
 ```
+
+## Public Demo Note
+
+All sample data, names, companies, and scenarios used in this project are fictional and created for public portfolio demonstration purposes.
 
 ## Portfolio Purpose
 
