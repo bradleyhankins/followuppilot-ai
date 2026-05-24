@@ -1,6 +1,6 @@
 # FollowUpPilot AI
 
-FollowUpPilot AI is a sales follow-up workflow tool for field-sales and home-service teams. It turns customer context into follow-up messages, CRM notes, call scripts, objection guidance, manager coaching notes, and multi-touch follow-up sequences.
+FollowUpPilot AI is a sales follow-up workflow assistant for field-sales and home-service teams. It turns customer context into next-best actions, priority scoring, lead temperature, deal risk, text messages, emails, voicemail scripts, CRM notes, call scripts, objection guidance, manager coaching notes, and multi-touch follow-up sequences.
 
 ## Live Demo
 
@@ -24,18 +24,27 @@ FollowUpPilot AI is designed for:
 - Revenue operations teams
 - Teams that need stronger CRM discipline and follow-up consistency
 
-## Current Version: v2.0
+## Current Version: v2.2
 
-FollowUpPilot AI v2.0 includes:
+FollowUpPilot AI v2.2 includes:
 
 - Portfolio Hub-style executive design
-- Public-safe fictional placeholder examples
+- Public-safe fictional sample scenarios
+- Sample scenario loader
 - Lead status workflow
 - Priority scoring
-- Recommended follow-up timing
-- Tone selector
+- Lead temperature
+- Deal risk scoring
+- Main risk diagnosis
+- Next best action recommendation
+- Why-this-recommendation explanation
+- Days since last contact input
+- Follow-up intensity selector
+- Communication channel selector
+- Expanded tone selector
 - Customer text message generator
 - Customer email generator
+- Voicemail script generator
 - CRM-ready note generator
 - Call script generator
 - Objection guidance
@@ -55,6 +64,9 @@ The workflow considers:
 - Urgency level
 - Financing discussion status
 - Preferred communication tone
+- Days since last contact
+- Follow-up intensity
+- Preferred communication channel
 - Sales follow-up timing
 - Manager coaching priority
 
@@ -64,9 +76,15 @@ The app generates:
 
 - Follow-up priority level
 - Priority score
+- Lead temperature
+- Deal risk
+- Main risk
 - Recommended follow-up timing
+- Next best action
+- Explanation of the recommendation
 - Copy-ready text message
 - Copy-ready email
+- Voicemail script
 - CRM note
 - Call script
 - Objection-handling guidance
@@ -84,9 +102,9 @@ The app generates:
 
 ![FollowUpPilot AI Follow-Up Recommendation](screenshots/followup-recommendation.png)
 
-### Text and Email Output
+### Text, Email, and Voicemail Output
 
-![FollowUpPilot AI Text and Email Output](screenshots/text-email-output.png)
+![FollowUpPilot AI Text Email Voicemail Output](screenshots/text-email-output.png)
 
 ### CRM Note and Call Script
 
@@ -149,7 +167,7 @@ Common issues include:
 
 FollowUpPilot AI was built as a lightweight AI-assisted workflow tool that helps sales representatives and managers create stronger follow-up communication and cleaner CRM documentation.
 
-The app allows users to enter basic customer and project context, then generates a complete follow-up workflow, including messaging, CRM notes, call scripts, manager coaching notes, and a downloadable plan.
+The app allows users to load a fictional sample scenario or enter their own customer context. It then generates a complete follow-up workflow, including next best action, lead temperature, deal risk, messaging, voicemail, CRM notes, call scripts, manager coaching notes, and a downloadable plan.
 
 ### My Role
 
@@ -160,6 +178,7 @@ I designed and built this project from concept to deployment, including:
 - Designing the input structure
 - Building the Streamlit app
 - Writing the rules-based AI-style generation logic
+- Creating next-best-action recommendations
 - Creating downloadable Markdown reports
 - Preparing fictional sample scenarios for public portfolio use
 - Publishing the project on GitHub
@@ -174,6 +193,7 @@ The tool can help teams:
 - Respond faster after customer interactions
 - Improve text and email quality
 - Standardize CRM notes
+- Add voicemail scripts to the follow-up workflow
 - Coach reps on objections
 - Reduce missed follow-up opportunities
 - Create a repeatable customer communication workflow
