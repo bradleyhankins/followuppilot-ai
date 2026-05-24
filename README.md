@@ -1,36 +1,66 @@
 # FollowUpPilot AI
 
-FollowUpPilot AI is an AI-assisted follow-up workflow tool for field-sales and home-service teams.
+FollowUpPilot AI is a sales follow-up workflow tool for field-sales and home-service teams. It turns customer context into follow-up messages, CRM notes, call scripts, objection guidance, manager coaching notes, and multi-touch follow-up sequences.
 
-It helps sales representatives and managers turn customer context into:
-
-- Customer follow-up text messages
-- Customer follow-up emails
-- CRM-ready notes
-- Call scripts
-- Objection-handling guidance
-- Manager coaching notes
-- Follow-up priority recommendations
-- Multi-touch follow-up sequences
-- Downloadable follow-up plans
-
-## Live Demo 
+## Live Demo
 
 [Launch FollowUpPilot AI](https://followuppilot-ai.streamlit.app/)
 
 ## Why this project exists
 
-Small and mid-sized home-service businesses often lose revenue because follow-up is inconsistent, CRM notes are incomplete, and reps do not always know the best next step after a customer interaction.
+Small and mid-sized businesses often lose revenue because follow-up is inconsistent, CRM notes are incomplete, and reps do not always know the best next step after a customer interaction.
 
-FollowUpPilot AI helps standardize the follow-up process and gives teams a faster way to create clear, professional, and context-aware communication.
+FollowUpPilot AI helps standardize the follow-up process and gives teams a faster way to create clear, professional, context-aware communication and documentation.
 
 ## Who this helps
 
-FollowUpPilot AI is designed for home-service companies, field-sales teams, sales representatives, sales managers, small business owners, and revenue operations teams.
+FollowUpPilot AI is designed for:
 
-## What it does
+- Home-service companies
+- Field-sales teams
+- Sales representatives
+- Sales managers
+- Small business owners
+- Revenue operations teams
+- Teams that need stronger CRM discipline and follow-up consistency
 
-The app allows users to enter customer and project context, then generates:
+## Current Version: v2.0
+
+FollowUpPilot AI v2.0 includes:
+
+- Portfolio Hub-style executive design
+- Public-safe fictional placeholder examples
+- Lead status workflow
+- Priority scoring
+- Recommended follow-up timing
+- Tone selector
+- Customer text message generator
+- Customer email generator
+- CRM-ready note generator
+- Call script generator
+- Objection guidance
+- Manager coaching note
+- Multi-touch follow-up sequence
+- Downloadable Markdown follow-up plan
+- Privacy note
+
+## What it analyzes
+
+The workflow considers:
+
+- Customer/project context
+- Project type
+- Lead status
+- Main concern or objection
+- Urgency level
+- Financing discussion status
+- Preferred communication tone
+- Sales follow-up timing
+- Manager coaching priority
+
+## Workflow Outputs
+
+The app generates:
 
 - Follow-up priority level
 - Priority score
@@ -39,7 +69,7 @@ The app allows users to enter customer and project context, then generates:
 - Copy-ready email
 - CRM note
 - Call script
-- Objection guidance
+- Objection-handling guidance
 - Manager coaching note
 - Suggested follow-up sequence
 - Downloadable Markdown follow-up plan
@@ -80,12 +110,12 @@ The app allows users to enter customer and project context, then generates:
 - Streamlit
 - Rules-based AI-style workflow logic
 - Markdown report export
+- GitHub
+- Streamlit Community Cloud
 
-## Portfolio Purpose
+## Public Demo Note
 
-This project was built as part of Bradley Hankins' AI operations and workflow automation portfolio.
-
-FollowUpPilot AI demonstrates how practical AI-assisted tools can help small and mid-sized businesses improve sales follow-up consistency, CRM discipline, customer communication, objection handling, manager coaching, and revenue operations workflows.
+All sample data, names, companies, and scenarios used in this project are fictional and created for public portfolio demonstration purposes.
 
 ## Run Locally
 
@@ -94,10 +124,11 @@ py -m pip install -r requirements.txt
 py -m streamlit run app.py
 ```
 
-## Built By
+## Portfolio Purpose
 
-Bradley Hankins  
-Operations & Revenue Leader | Technology & AI Workflow Integration
+This project was built as part of Bradley Hankins' AI operations and workflow automation portfolio.
+
+FollowUpPilot AI demonstrates how practical AI-assisted tools can help small and mid-sized businesses improve sales follow-up consistency, CRM discipline, customer communication, objection handling, manager coaching, and revenue operations workflows.
 
 ## Case Study
 
@@ -118,18 +149,7 @@ Common issues include:
 
 FollowUpPilot AI was built as a lightweight AI-assisted workflow tool that helps sales representatives and managers create stronger follow-up communication and cleaner CRM documentation.
 
-The app allows users to enter basic customer and project context, then generates:
-
-- Follow-up priority level
-- Recommended follow-up timing
-- Customer text message
-- Customer email
-- CRM-ready note
-- Call script
-- Objection guidance
-- Manager coaching note
-- Multi-touch follow-up sequence
-- Downloadable follow-up plan
+The app allows users to enter basic customer and project context, then generates a complete follow-up workflow, including messaging, CRM notes, call scripts, manager coaching notes, and a downloadable plan.
 
 ### My Role
 
@@ -171,3 +191,8 @@ Planned future improvements include:
 - Rep performance tracking
 - Integration with lead status CSV uploads
 - PDF follow-up plan downloads
+
+## Built By
+
+Bradley Hankins  
+Operations & Revenue Leader | AI Workflow Automation | RevOps & Process Improvement
