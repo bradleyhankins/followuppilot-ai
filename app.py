@@ -1,6 +1,6 @@
 import streamlit as st
 
-from ai_helpers import enhance_text
+from ai_helpers import enhance_text, stable_cache_key
 from pdf_helpers import markdown_to_pdf
 
 st.set_page_config(page_title="FollowUpPilot AI", page_icon="💬", layout="wide")
@@ -184,7 +184,7 @@ def parse_ai_copy(raw, fallback):
     return parsed
 
 def enhance_outputs(inputs, outputs):
-    cache_key = f"followup_copy_{hash(str(inputs))}"
+    cache_key = stable_cache_key("followup_copy", inputs)
     raw = enhance_text(ai_copy_prompt(inputs, outputs), "", cache_key)
     if not raw:
         return outputs
