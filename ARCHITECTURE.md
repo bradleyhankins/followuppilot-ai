@@ -1,68 +1,63 @@
 # Architecture
 
-FollowUpPilot AI is a Streamlit-based public demonstration of a sales follow-up workflow assistant for home-service and local service businesses.
+FollowUpPilot AI is a Streamlit-based public demonstration of a follow-up operating system for home-service and local service businesses.
 
-The near-term interface is Streamlit. The core logic is intentionally modular so the deterministic workflow can later move into a private multi-user application.
-
-## Layers
+## Current Layers
 
 ```text
 Streamlit UI
-- form inputs
-- validation messages
-- recommendation and copy-center rendering
-- PDF download
+- Manager Dashboard
+- Lead Workspace
+- Follow-Up Builder
+- About This Demo
 
-Domain models and validation
+Domain models
 - LeadInput
-- GeneratedCopy
 - FollowupPlan
-- user-friendly validation messages
+- GeneratedCopy
+- LeadRecord
 
 Rules engine
-- priority scoring
-- lead temperature
-- deal risk
-- lead-stage behavior
+- scoring
+- risk
 - suggested follow-up date
-- overdue/due-today/upcoming status
-- channel-specific next action
-- deterministic fallback copy
+- overdue/due-today/upcoming state
+- stage behavior
+- copy generation
+- follow-up sequence
 
-Optional AI enhancement
-- prompt construction
-- JSON-first response parsing
-- safe diagnostic handling
-- deterministic fallback when unavailable
+Lead workspace services
+- session-state store
+- demo data seed
+- CSV import/export
+- filters and sorting
+- outcome handling
+- follow-up completion
 
-Reporting
-- report text builder
-- PDF generation
+Dashboard services
+- summary metrics
+- manager attention flags
+- chart-ready aggregations
+
+Optional AI
+- prompt building
+- JSON-first parsing
+- deterministic fallback
 ```
 
 ## Data Flow
 
-1. A user loads a sample scenario or enters lead details in Streamlit.
-2. `core.models.LeadInput` normalizes current and legacy field names.
-3. `core.validation.validate_lead_input` returns user-friendly messages before generation.
-4. `core.followup_logic.run_followup_workflow` creates the deterministic follow-up plan.
-5. `ai_helpers.enhance_text` optionally improves copy-center text if `OPENAI_API_KEY` or `OPENAI_TOKEN` is configured.
-6. The app renders escaped outputs and offers a PDF export.
+1. Demo leads are loaded from `data/demo_leads.py` into Streamlit session state.
+2. Each `LeadRecord` reuses `LeadInput` for deterministic planning.
+3. `run_followup_workflow` calculates the follow-up plan.
+4. The dashboard aggregates refreshed lead records.
+5. The workspace edits a lead, records an outcome, and recalculates the next recommendation.
+6. CSV import/export uses row-level validation and does not persist uploaded files.
 
-## Preserved Design Choices
+## Persistence
 
-- Rules-first deterministic behavior
-- Optional AI copy polish
-- Graceful no-AI fallback
-- Public-safe fictional sample data
-- Copy-center workflow
-- PDF export
-- Privacy-forward positioning
+Phase 2 uses Streamlit session-state persistence only. This keeps the public demo simple while isolating store operations in `core/lead_store.py` so SQLite or PostgreSQL can replace the session store later.
 
-## Current Non-Goals
+## Non-Goals
 
-This phase does not add a production database, authentication, billing, scheduled jobs, direct CRM integration, or a private manager dashboard.
-
-## Future Direction
-
-The next practical architecture step is a persisted lead-list layer that can power manager visibility into open and overdue follow-up without changing the scoring and copy-generation core.
+No authentication, production database, scheduled jobs, billing, live email/SMS sending, or direct CRM integration is included in this phase.

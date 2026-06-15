@@ -1,55 +1,31 @@
 # Privacy and AI Use
 
-FollowUpPilot AI is a public portfolio demo and sales workflow assistant. It is designed for fictional, sample, or generalized customer follow-up scenarios.
+FollowUpPilot AI is a public demo. It is designed for fictional, sample, or generalized customer follow-up scenarios only.
 
-## User Data Guidance
+## Do Not Enter
 
-Do not enter sensitive, confidential, regulated, or private information into the public demo.
-
-Avoid entering:
-
-- real customer personally identifiable information
+- real customer personal information
 - payment details
 - financing application details
 - medical, legal, or regulated data
 - internal company secrets
-- proprietary pricing, contracts, or confidential business records
+- proprietary contracts or confidential business records
 - passwords, API keys, or credentials
 
-Optional email and phone fields exist to model realistic workflows, but they are not required for public demo use.
+## Session Persistence
+
+Phase 2 stores imported and edited leads only in the current Streamlit session. Uploaded CSV files are parsed in memory and are not intentionally written to persistent storage by the application.
 
 ## AI Processing
 
-When `OPENAI_API_KEY` or `OPENAI_TOKEN` is configured, selected user inputs may be sent to the AI provider to improve copy-center wording.
+When `OPENAI_API_KEY` or `OPENAI_TOKEN` is configured, selected inputs may be sent to the AI provider to improve copy-center wording. The deterministic rules engine remains the source of truth for priority, dates, risk, stage behavior, and next action.
 
-The app is built so that:
+The app works without an AI key.
 
-- deterministic rules are the source of truth
-- AI only improves wording, clarity, tone, and structure
-- AI should not invent offers, deadlines, approvals, or promises
-- AI failure falls back to rules-based output
-- the app does not intentionally store user-submitted data
+## CSV Safety
 
-## Secrets
+CSV exports protect against spreadsheet formula injection by prefixing risky cell values that begin with `=`, `+`, `-`, or `@`.
 
-Use Streamlit secrets or environment variables for API keys. Do not commit `.streamlit/secrets.toml`; it is ignored by git.
+## Production Requirements
 
-Preferred:
-
-```bash
-OPENAI_API_KEY=your_api_key_here
-```
-
-Legacy compatibility:
-
-```bash
-OPENAI_TOKEN=your_api_key_here
-```
-
-## Diagnostics
-
-AI diagnostics are only recorded when `FOLLOWUPPILOT_DEBUG_AI=1` is set. Diagnostics are intentionally high-level and do not expose secrets, stack traces, or sensitive input content.
-
-## Public Demo Note
-
-All built-in sample names, companies, and scenarios are fictional and created for portfolio demonstration purposes.
+A production version would need authentication, authorization, durable storage, audit controls, data-retention policy, integration governance, and operational monitoring.

@@ -3,14 +3,35 @@ from __future__ import annotations
 from datetime import date, timedelta
 from html import escape
 
+import altair as alt
+import pandas as pd
 import streamlit as st
 
 from ai_helpers import enhance_text, stable_cache_key
+from core.dashboard import (
+    count_by,
+    dashboard_metrics,
+    manager_attention_flags,
+    overdue_by_rep,
+    value_by_stage,
+)
 from core.followup_logic import run_followup_workflow
-from core.models import LeadInput
+from core.lead_store import (
+    OUTCOMES,
+    SessionLeadStore,
+    complete_followup,
+    csv_template,
+    export_leads_csv,
+    filter_leads,
+    import_leads_csv,
+    latest_followup_activity,
+    refresh_lead_plan,
+)
+from core.models import LeadInput, LeadRecord
 from core.prompts import ai_copy_prompt, parse_ai_copy
 from core.report_builder import build_report
 from core.validation import validate_lead_input
+from data.demo_leads import demo_leads
 from data.sample_data import (
     CHANNEL_OPTIONS,
     FINANCING_OPTIONS,
@@ -28,12 +49,42 @@ st.set_page_config(page_title="FollowUpPilot AI", page_icon="FP", layout="wide")
 
 CSS = """
 <style>
-.block-container{max-width:1180px;padding-top:1.35rem;padding-bottom:3rem}[data-testid="stSidebar"]{background:#111827}[data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3,[data-testid="stSidebar"] p,[data-testid="stSidebar"] span,[data-testid="stSidebar"] label,[data-testid="stSidebar"] li,[data-testid="stSidebar"] ul,[data-testid="stSidebar"] ol{color:#f9fafb!important}[data-testid="stSidebar"] li::marker{color:#93c5fd!important}.hero{padding:1.9rem 2rem;border-radius:20px;background:linear-gradient(135deg,#111827 0%,#1f2937 52%,#334155 100%);color:#fff;box-shadow:0 18px 36px rgba(17,24,39,.18);margin-bottom:1rem;border:1px solid rgba(255,255,255,.08)}.eyebrow{text-transform:uppercase;letter-spacing:.13em;font-size:.75rem;font-weight:800;color:#93c5fd;margin-bottom:.65rem}.hero-title{font-size:2.25rem;line-height:1.08;font-weight:850;margin-bottom:.65rem}.hero-subtitle{font-size:1.02rem;line-height:1.62;color:#e5e7eb;max-width:900px}.hero-pills span{display:inline-block;padding:.35rem .65rem;margin:.75rem .28rem 0 0;border-radius:999px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);font-weight:700;font-size:.78rem;color:#f8fafc}.section-title{margin-top:1.25rem;margin-bottom:.55rem;font-size:1.4rem;font-weight:850;color:#111827}.section-lede{color:#4b5563;line-height:1.6;margin-bottom:1rem;max-width:950px}.form-group-title{font-size:.9rem;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:.35rem 0 .15rem 0}.metric-card,.output-card,.guidance-card,.sequence-card,.workflow-card,.nba-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 8px 20px rgba(15,23,42,.055)}.metric-card{height:150px;padding:1rem;margin-bottom:.75rem}.metric-label{color:#6b7280;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}.metric-value{color:#111827;font-size:1.22rem;line-height:1.18;font-weight:900;overflow-wrap:break-word}.metric-note{color:#64748b;font-size:.85rem;margin-top:.55rem}.output-card,.guidance-card,.sequence-card,.workflow-card,.nba-card{padding:1.15rem;margin-bottom:.8rem}.output-card{border-left:5px solid #111827}.guidance-card,.workflow-card{border-left:5px solid #1d4ed8}.sequence-card{border-left:5px solid #059669}.nba-card{border-left:5px solid #111827;background:#f8fafc}.output-card h3,.guidance-card h3,.sequence-card h3,.workflow-card h3,.nba-card h3{font-size:1.05rem;font-weight:850;color:#111827;margin-bottom:.4rem}.output-card p,.guidance-card p,.sequence-card p,.workflow-card p,.nba-card p,.output-card li,.guidance-card li,.sequence-card li,.workflow-card li,.nba-card li{color:#4b5563;line-height:1.52;font-size:.93rem}.status-high{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}.status-medium{background:#fef3c7;color:#92400e;border:1px solid #fde68a}.status-low{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}.status-neutral{background:#e5e7eb;color:#374151;border:1px solid #d1d5db}.status-pill{display:inline-block;padding:.25rem .6rem;border-radius:999px;font-weight:850;font-size:.78rem;margin-bottom:.5rem}.note-box{padding:.9rem 1rem;border-radius:14px;background:#f8fafc;color:#334155;border:1px solid #e2e8f0;font-weight:650;margin:.9rem 0;font-size:.92rem}
+.block-container{max-width:1220px;padding-top:1.1rem;padding-bottom:3rem}
+[data-testid="stSidebar"]{background:#111827}
+[data-testid="stSidebar"] h1,[data-testid="stSidebar"] h2,[data-testid="stSidebar"] h3,[data-testid="stSidebar"] p,[data-testid="stSidebar"] span,[data-testid="stSidebar"] label,[data-testid="stSidebar"] li{color:#f9fafb!important}
+.app-hero{padding:1.55rem 1.7rem;border-radius:14px;background:linear-gradient(135deg,#111827 0%,#1f2937 52%,#334155 100%);color:#fff;margin-bottom:1rem;border:1px solid rgba(255,255,255,.08)}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;font-weight:800;color:#93c5fd;margin-bottom:.45rem}
+.hero-title{font-size:2rem;line-height:1.08;font-weight:850;margin-bottom:.45rem}
+.hero-subtitle{font-size:1rem;line-height:1.55;color:#e5e7eb;max-width:940px}
+.section-title{margin-top:1.15rem;margin-bottom:.45rem;font-size:1.32rem;font-weight:850;color:#111827}
+.section-lede{color:#4b5563;line-height:1.55;margin-bottom:.8rem;max-width:960px}
+.form-group-title{font-size:.86rem;font-weight:850;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:.35rem 0 .15rem 0}
+.metric-card,.output-card,.guidance-card,.sequence-card,.workflow-card,.nba-card,.attention-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 6px 16px rgba(15,23,42,.045)}
+.metric-card{padding:.9rem;margin-bottom:.65rem;min-height:118px}
+.metric-label{color:#6b7280;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.45rem}
+.metric-value{color:#111827;font-size:1.28rem;line-height:1.18;font-weight:900;overflow-wrap:break-word}
+.metric-note{color:#64748b;font-size:.82rem;margin-top:.45rem}
+.output-card,.guidance-card,.sequence-card,.workflow-card,.nba-card,.attention-card{padding:1rem;margin-bottom:.72rem}
+.output-card{border-left:5px solid #111827}.guidance-card,.workflow-card{border-left:5px solid #1d4ed8}.sequence-card{border-left:5px solid #059669}.nba-card{border-left:5px solid #111827;background:#f8fafc}.attention-card{border-left:5px solid #dc2626;background:#fffafa}
+.output-card h3,.guidance-card h3,.sequence-card h3,.workflow-card h3,.nba-card h3,.attention-card h3{font-size:1rem;font-weight:850;color:#111827;margin-bottom:.35rem}
+.output-card p,.guidance-card p,.sequence-card p,.workflow-card p,.nba-card p,.attention-card p,.output-card li,.guidance-card li,.sequence-card li,.workflow-card li,.nba-card li{color:#4b5563;line-height:1.5;font-size:.92rem}
+.status-high{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}.status-medium{background:#fef3c7;color:#92400e;border:1px solid #fde68a}.status-low{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}.status-neutral{background:#e5e7eb;color:#374151;border:1px solid #d1d5db}
+.status-pill{display:inline-block;padding:.25rem .6rem;border-radius:999px;font-weight:850;font-size:.78rem;margin-bottom:.5rem}
+.note-box{padding:.85rem 1rem;border-radius:12px;background:#f8fafc;color:#334155;border:1px solid #e2e8f0;font-weight:650;margin:.85rem 0;font-size:.9rem}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
 
-PRIVACY_NOTE = "Privacy note: Use fictional/sample data for public demos. Do not enter sensitive, confidential, or regulated customer information. If AI is enabled, entered text may be processed by the configured AI provider for output enhancement."
+PRIVACY_NOTE = (
+    "Demo note: FollowUpPilot uses fictional sample data. Do not enter sensitive, confidential, "
+    "regulated, or real customer information into the public demo."
+)
+
+
+def store() -> SessionLeadStore:
+    lead_store = SessionLeadStore(st.session_state)
+    lead_store.seed(demo_leads())
+    return lead_store
 
 
 def section_title(title: str, lede: str | None = None) -> None:
@@ -46,7 +97,7 @@ def form_group(title: str) -> None:
     st.markdown(f'<div class="form-group-title">{escape(title)}</div>', unsafe_allow_html=True)
 
 
-def metric_card(label: str, value: str, note: str | None = None) -> None:
+def metric_card(label: str, value: str | int | float, note: str | None = None) -> None:
     note_html = f'<div class="metric-note">{escape(note)}</div>' if note else ""
     st.markdown(
         f'<div class="metric-card"><div class="metric-label">{escape(label)}</div>'
@@ -73,162 +124,31 @@ def priority_class(priority: str) -> str:
     return "status-neutral"
 
 
-def render_sidebar() -> None:
+def render_sidebar() -> str:
     with st.sidebar:
         st.title("FollowUpPilot AI")
-        st.caption("Version 3.0 foundation")
-        st.markdown("Sales follow-up workflow automation for field-sales and home-service teams.")
+        st.caption("Version 4.0 workspace")
+        st.markdown("Fictional-data follow-up operating system demo.")
         st.divider()
-        st.markdown("### Outputs")
-        st.markdown(
-            "- Lead temperature\n- Deal risk\n- Follow-up date\n- Overdue status\n- Copy center\n- Timeline\n- CRM note / call script\n- PDF follow-up plan"
+        view = st.radio(
+            "Navigation",
+            ["Manager Dashboard", "Lead Workspace", "Follow-Up Builder", "About This Demo"],
+            index=["Manager Dashboard", "Lead Workspace", "Follow-Up Builder", "About This Demo"].index(
+                st.session_state.get("view", "Manager Dashboard")
+            ),
         )
+        st.session_state["view"] = view
+        st.divider()
+        st.markdown(PRIVACY_NOTE)
+    return view
 
 
-def render_hero() -> None:
+def render_hero(title: str, subtitle: str) -> None:
     st.markdown(
-        '<div class="hero"><div class="eyebrow">Sales Follow-Up Workflow Tool</div><div class="hero-title">FollowUpPilot AI</div><div class="hero-subtitle">Turn customer context into next-best actions, follow-up messages, CRM notes, call scripts, objection guidance, manager coaching notes, and multi-touch sequences.</div><div class="hero-pills"><span>Sales Execution</span><span>CRM Discipline</span><span>Follow-Up</span><span>Next Best Action</span><span>Streamlit</span></div></div>',
+        f'<div class="app-hero"><div class="eyebrow">Follow-Up Operating System Demo</div>'
+        f'<div class="hero-title">{escape(title)}</div><div class="hero-subtitle">{escape(subtitle)}</div></div>',
         unsafe_allow_html=True,
     )
-
-
-def scenario_date(scenario: dict) -> date:
-    if scenario.get("last_contact_date"):
-        parsed = LeadInput.from_mapping(scenario).last_contact_date
-        if parsed:
-            return parsed
-    return date.today() - timedelta(days=int(scenario.get("days_since", 1)))
-
-
-def build_inputs(scenario: dict) -> dict | None:
-    with st.form("followup_form"):
-        form_group("Customer and project details")
-        a, b = st.columns(2)
-        with a:
-            customer = st.text_input(
-                "Customer Name",
-                value=scenario.get("customer_name", scenario.get("customer", "")),
-                placeholder="Example: Avery Johnson",
-            )
-        with b:
-            company = st.text_input(
-                "Business / Team Name",
-                value=scenario.get("company_name", scenario.get("company", "")),
-                placeholder="Example: Summit Home Services",
-            )
-        c, d = st.columns(2)
-        with c:
-            project_type = st.selectbox(
-                "Service Type",
-                PROJECT_TYPES,
-                index=PROJECT_TYPES.index(
-                    scenario.get("service_type", scenario.get("project_type", "Roof Replacement"))
-                ),
-            )
-        with d:
-            default_stage = scenario.get("lead_stage", scenario.get("lead_status", "Estimate Sent"))
-            lead_status = st.selectbox(
-                "Lead Stage",
-                LEAD_STATUSES,
-                index=LEAD_STATUSES.index(default_stage)
-                if default_stage in LEAD_STATUSES
-                else LEAD_STATUSES.index("Estimate Sent"),
-            )
-
-        e, f, g = st.columns(3)
-        with e:
-            customer_email = st.text_input(
-                "Customer Email (optional)", value=scenario.get("customer_email", "")
-            )
-        with f:
-            customer_phone = st.text_input(
-                "Customer Phone (optional)", value=scenario.get("customer_phone", "")
-            )
-        with g:
-            assigned_rep = st.text_input("Assigned Rep (optional)", value=scenario.get("assigned_rep", ""))
-
-        form_group("Last interaction")
-        context = st.text_area(
-            "Last Interaction / Context",
-            value=scenario.get("context_notes", scenario.get("context", "")),
-            height=120,
-            max_chars=4000,
-        )
-
-        form_group("Follow-up strategy")
-        h, i, j, k = st.columns(4)
-        with h:
-            objection = st.selectbox(
-                "Main Concern",
-                OBJECTIONS,
-                index=OBJECTIONS.index(scenario.get("objection", "Price")),
-            )
-        with i:
-            financing = st.selectbox(
-                "Financing?",
-                FINANCING_OPTIONS,
-                index=FINANCING_OPTIONS.index(scenario.get("financing", "No")),
-            )
-        with j:
-            urgency = st.selectbox(
-                "Urgency",
-                URGENCY_LEVELS,
-                index=URGENCY_LEVELS.index(scenario.get("urgency", "Medium")),
-            )
-        with k:
-            tone = st.selectbox("Tone", TONES, index=TONES.index(scenario.get("tone", "Professional")))
-
-        left, middle_left, middle_right, right = st.columns(4)
-        with left:
-            last_contact_date = st.date_input(
-                "Last Contact Date",
-                value=scenario_date(scenario),
-                max_value=date.today(),
-            )
-        with middle_left:
-            estimate_amount = st.number_input(
-                "Estimate Amount (optional)",
-                min_value=0.0,
-                value=float(scenario.get("estimate_amount", 0.0) or 0.0),
-                step=100.0,
-            )
-        with middle_right:
-            intensity = st.selectbox(
-                "Follow-Up Intensity",
-                FOLLOWUP_INTENSITIES,
-                index=FOLLOWUP_INTENSITIES.index(scenario.get("followup_intensity", scenario.get("intensity", "Standard"))),
-            )
-        with right:
-            channel = st.selectbox(
-                "Preferred Channel",
-                CHANNEL_OPTIONS,
-                index=CHANNEL_OPTIONS.index(scenario.get("preferred_channel", scenario.get("channel", "All"))),
-            )
-        submitted = st.form_submit_button("Generate Follow-Up Plan", use_container_width=True)
-
-    if not submitted:
-        return None
-
-    days_since = max(0, (date.today() - last_contact_date).days)
-    return {
-        "customer_name": customer,
-        "company_name": company,
-        "customer_email": customer_email,
-        "customer_phone": customer_phone,
-        "service_type": project_type,
-        "lead_stage": lead_status,
-        "context_notes": context,
-        "objection": objection,
-        "financing": financing,
-        "urgency": urgency,
-        "tone": tone,
-        "last_contact_date": last_contact_date.isoformat(),
-        "days_since_last_contact": days_since,
-        "assigned_rep": assigned_rep,
-        "estimate_amount": estimate_amount if estimate_amount else None,
-        "followup_intensity": intensity,
-        "preferred_channel": channel,
-    }
 
 
 def enhance_outputs(inputs: dict, outputs: dict) -> dict:
@@ -239,8 +159,7 @@ def enhance_outputs(inputs: dict, outputs: dict) -> dict:
     )
     if not raw:
         return outputs
-    enhanced = parse_ai_copy(raw, outputs)
-    outputs.update(enhanced)
+    outputs.update(parse_ai_copy(raw, outputs))
     return outputs
 
 
@@ -274,20 +193,18 @@ def render_results(outputs: dict) -> None:
     html_card("Next Best Action", status_html, "nba-card", body_is_html=True)
     html_card("Why This Recommendation", outputs["why"], "guidance-card")
 
-    section_title("Copy center", "Use this section when the rep needs the fastest copy-ready outputs.")
-    copy_tabs = st.tabs(
-        ["Send this text", "Send this email", "Leave this voicemail", "Add this CRM note", "Manager coaching note"]
-    )
-    with copy_tabs[0]:
+    section_title("Copy center", "Copy-ready outputs for customer communication and CRM documentation.")
+    tabs = st.tabs(["Text", "Email", "Voicemail", "CRM Note", "Manager Coaching Note"])
+    with tabs[0]:
         st.text_area("Text", outputs["sms"], height=145)
-    with copy_tabs[1]:
+    with tabs[1]:
         st.text_input("Email Subject", outputs["subject"])
-        st.text_area("Email Body", outputs["email"], height=260)
-    with copy_tabs[2]:
+        st.text_area("Email Body", outputs["email"], height=250)
+    with tabs[2]:
         st.text_area("Voicemail", outputs["voicemail"], height=145)
-    with copy_tabs[3]:
-        st.text_area("CRM Note", outputs["crm"], height=260)
-    with copy_tabs[4]:
+    with tabs[3]:
+        st.text_area("CRM Note", outputs["crm"], height=250)
+    with tabs[4]:
         st.text_area("Manager Coaching Note", outputs["coaching"], height=145)
 
     section_title("Follow-up timeline")
@@ -297,15 +214,14 @@ def render_results(outputs: dict) -> None:
             html_card(label, message, "sequence-card")
 
     section_title("Call workflow and objection guidance")
-    t1, t2 = st.columns(2)
-    with t1:
-        st.text_area("Call script", outputs["call"], height=300)
-    with t2:
+    left, right = st.columns(2)
+    with left:
+        st.text_area("Call script", outputs["call"], height=285)
+    with right:
         html_card("Objection Guidance", outputs["guidance"], "guidance-card")
 
 
-def render_download(inputs: dict, outputs: dict) -> None:
-    section_title("Download follow-up plan")
+def render_download(inputs: dict, outputs: dict, key: str = "download_pdf") -> None:
     try:
         report = build_report(inputs, outputs)
         pdf_report = markdown_to_pdf(report, title="FollowUpPilot AI Follow-Up Plan")
@@ -321,61 +237,444 @@ def render_download(inputs: dict, outputs: dict) -> None:
         file_name="followuppilot-follow-up-plan.pdf",
         mime="application/pdf",
         use_container_width=True,
+        key=key,
     )
+
+
+def render_manager_dashboard(lead_store: SessionLeadStore) -> None:
+    render_hero(
+        "Manager Dashboard",
+        "See open follow-up risk, overdue activity, rep workload, and the leads that need manager attention.",
+    )
+    leads = lead_store.list()
+    metrics = dashboard_metrics(leads)
+    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    with c1:
+        metric_card("Active Leads", metrics["active_leads"])
+    with c2:
+        metric_card("Overdue", metrics["overdue_followups"])
+    with c3:
+        metric_card("Due Today", metrics["due_today"])
+    with c4:
+        metric_card("High Priority", metrics["high_priority"])
+    with c5:
+        metric_card("Active Pipeline", money(metrics["active_pipeline_value"]))
+    with c6:
+        metric_card("Won Value", money(metrics["won_value"]))
+
+    section_title("Manager attention", "Deterministic flags that explain where a manager should look first.")
+    flags = manager_attention_flags(leads)
+    if not flags:
+        st.success("No manager attention flags for the current lead list.")
+    else:
+        for item in flags[:8]:
+            html_card(item.title, item.reason, "attention-card")
+
+    section_title("Pipeline views", "Each chart is intended to help spot follow-up bottlenecks.")
+    chart_cols = st.columns(2)
+    with chart_cols[0]:
+        st.caption("Leads by stage")
+        render_bar_chart(count_by(leads, "lead_stage"), "Stage", "Leads")
+        st.caption("Leads by assigned rep")
+        render_bar_chart(count_by(leads, "assigned_rep"), "Rep", "Leads")
+    with chart_cols[1]:
+        st.caption("Pipeline value by stage")
+        render_bar_chart(value_by_stage(leads), "Stage", "Value")
+        st.caption("Overdue leads by rep")
+        render_bar_chart(overdue_by_rep(leads), "Rep", "Overdue")
+    st.caption("Priority distribution")
+    render_bar_chart(count_by(leads, "priority"), "Priority", "Leads")
+
+    render_lead_table(lead_store)
+    render_csv_tools(lead_store)
+
+
+def render_lead_table(lead_store: SessionLeadStore) -> None:
+    leads = lead_store.list()
+    section_title("Lead table", "Filter, sort, and open a lead in the workspace.")
+    reps = ["All"] + sorted({lead.assigned_rep for lead in leads if lead.assigned_rep})
+    stages = ["All"] + sorted({lead.lead_stage for lead in leads})
+    priorities = ["All"] + sorted({lead.priority for lead in leads})
+    statuses = ["All"] + sorted({lead.followup_status for lead in leads})
+    f1, f2, f3, f4 = st.columns(4)
+    with f1:
+        search = st.text_input("Search leads", placeholder="Customer, service, rep...")
+    with f2:
+        rep = st.selectbox("Assigned rep", reps)
+    with f3:
+        stage = st.selectbox("Stage", stages)
+    with f4:
+        priority = st.selectbox("Priority", priorities)
+    f5, f6, f7 = st.columns(3)
+    with f5:
+        status = st.selectbox("Follow-up status", statuses)
+    with f6:
+        sort_by = st.selectbox("Sort by", ["follow-up date", "priority", "estimate amount", "last contact"])
+    with f7:
+        overdue_only = st.checkbox("Overdue only")
+
+    filtered = filter_leads(leads, search, rep, stage, priority, status, overdue_only, sort_by)
+    rows = [
+        {
+            "lead_id": lead.lead_id,
+            "customer": lead.customer_name,
+            "service": lead.service_type,
+            "rep": lead.assigned_rep,
+            "stage": lead.lead_stage,
+            "estimate": money(lead.estimate_amount or 0),
+            "priority": lead.priority,
+            "risk": lead.deal_risk,
+            "follow-up date": lead.suggested_followup_date.isoformat()
+            if lead.suggested_followup_date
+            else "N/A",
+            "follow-up status": lead.followup_status,
+        }
+        for lead in filtered
+    ]
+    st.dataframe(rows, hide_index=True, use_container_width=True)
+    if not filtered:
+        st.info("No leads match the current filters.")
+        return
+    selected_label = st.selectbox(
+        "Open lead in workspace",
+        [f"{lead.lead_id} - {lead.customer_name} ({lead.service_type})" for lead in filtered],
+    )
+    if st.button("Open selected lead", use_container_width=True):
+        st.session_state["selected_lead_id"] = selected_label.split(" - ")[0]
+        st.session_state["view"] = "Lead Workspace"
+        st.rerun()
+
+
+def render_csv_tools(lead_store: SessionLeadStore) -> None:
+    with st.expander("CSV import and export"):
+        st.download_button(
+            "Download CSV Template",
+            data=csv_template(),
+            file_name="followuppilot-lead-template.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+        uploaded = st.file_uploader("Upload fictional lead CSV", type=["csv"])
+        if uploaded is not None:
+            text = uploaded.getvalue().decode("utf-8-sig")
+            accepted, rejected = import_leads_csv(text, {lead.lead_id for lead in lead_store.list()})
+            if accepted:
+                lead_store.replace_all([*lead_store.list(), *accepted])
+                st.success(f"Imported {len(accepted)} lead(s).")
+            if rejected:
+                rejected_rows = len({item["source_row"] for item in rejected})
+                st.warning(f"Rejected {rejected_rows} row(s).")
+                st.caption("Rejected row details")
+                st.table(rejected)
+        st.download_button(
+            "Export Current Lead List",
+            data=export_leads_csv(lead_store.list()),
+            file_name="followuppilot-leads.csv",
+            mime="text/csv",
+            use_container_width=True,
+        )
+
+
+def render_lead_workspace(lead_store: SessionLeadStore) -> None:
+    render_hero(
+        "Lead Workspace",
+        "Review one managed lead, update its state, generate follow-up copy, and record the outcome.",
+    )
+    leads = lead_store.list()
+    if not leads:
+        st.info("No leads are loaded. Import a CSV or reset the demo data from the dashboard.")
+        return
+    labels = [f"{lead.lead_id} - {lead.customer_name} ({lead.service_type})" for lead in leads]
+    default_id = st.session_state.get("selected_lead_id", leads[0].lead_id)
+    default_index = next((i for i, lead in enumerate(leads) if lead.lead_id == default_id), 0)
+    selected = st.selectbox("Choose lead", labels, index=default_index)
+    lead = lead_store.get(selected.split(" - ")[0])
+    if lead is None:
+        st.warning("Selected lead could not be found.")
+        return
+
+    edited = render_lead_edit_form(lead)
+    if edited:
+        messages = workspace_validation_messages(edited)
+        if messages:
+            st.warning("Please adjust the lead before saving.")
+            for message in messages:
+                st.write(f"- {message}")
+        else:
+            refreshed = refresh_lead_plan(edited)
+            lead_store.upsert(refreshed)
+            st.session_state["selected_lead_id"] = refreshed.lead_id
+            st.success("Lead saved and follow-up plan refreshed.")
+            lead = refreshed
+
+    plan = enhance_outputs(lead.to_workflow_dict(), run_followup_workflow(lead.to_workflow_dict()))
+    render_latest_activity(lead)
+    render_results(plan)
+    render_download(lead.to_workflow_dict(), plan, key=f"download_{lead.lead_id}")
+    render_completion_controls(lead_store, lead)
+
+
+def render_lead_edit_form(lead: LeadRecord) -> LeadRecord | None:
+    with st.form(f"edit_{lead.lead_id}"):
+        form_group("Lead details")
+        a, b, c = st.columns(3)
+        with a:
+            customer = st.text_input("Customer Name", value=lead.customer_name)
+        with b:
+            company = st.text_input("Business / Team Name", value=lead.company_name)
+        with c:
+            rep = st.text_input("Assigned Rep", value=lead.assigned_rep)
+        d, e, f = st.columns(3)
+        with d:
+            email = st.text_input("Customer Email (optional)", value=lead.customer_email)
+        with e:
+            phone = st.text_input("Customer Phone (optional)", value=lead.customer_phone)
+        with f:
+            estimate = st.number_input(
+                "Estimate Amount",
+                min_value=0.0,
+                value=float(lead.estimate_amount or 0),
+                step=100.0,
+            )
+        g, h, i = st.columns(3)
+        with g:
+            service = st.selectbox("Service Type", PROJECT_TYPES, index=safe_index(PROJECT_TYPES, lead.service_type))
+        with h:
+            stage = st.selectbox("Lead Stage", LEAD_STATUSES, index=safe_index(LEAD_STATUSES, lead.lead_stage))
+        with i:
+            last_contact = st.date_input(
+                "Last Contact Date",
+                value=lead.last_contact_date or date.today(),
+                max_value=date.today(),
+            )
+        context = st.text_area("Last Interaction / Context", value=lead.context_notes, height=110)
+        left, middle_left, middle_right, right = st.columns(4)
+        with left:
+            objection = st.selectbox("Main Concern", OBJECTIONS, index=safe_index(OBJECTIONS, lead.objection))
+        with middle_left:
+            urgency = st.selectbox("Urgency", URGENCY_LEVELS, index=safe_index(URGENCY_LEVELS, lead.urgency))
+        with middle_right:
+            financing = st.selectbox("Financing?", FINANCING_OPTIONS, index=safe_index(FINANCING_OPTIONS, lead.financing))
+        with right:
+            tone = st.selectbox("Tone", TONES, index=safe_index(TONES, lead.tone))
+        n, o = st.columns(2)
+        with n:
+            channel = st.selectbox("Preferred Channel", CHANNEL_OPTIONS, index=safe_index(CHANNEL_OPTIONS, lead.preferred_channel))
+        with o:
+            intensity = st.selectbox("Follow-Up Intensity", FOLLOWUP_INTENSITIES, index=safe_index(FOLLOWUP_INTENSITIES, lead.followup_intensity))
+        submitted = st.form_submit_button("Save and refresh lead", use_container_width=True)
+    if not submitted:
+        return None
+    return LeadRecord.from_mapping(
+        {
+            **lead.to_dict(),
+            "customer_name": customer,
+            "company_name": company,
+            "customer_email": email,
+            "customer_phone": phone,
+            "service_type": service,
+            "lead_stage": stage,
+            "assigned_rep": rep,
+            "estimate_amount": estimate,
+            "context_notes": context,
+            "objection": objection,
+            "urgency": urgency,
+            "financing": financing,
+            "tone": tone,
+            "preferred_channel": channel,
+            "followup_intensity": intensity,
+            "last_contact_date": last_contact.isoformat(),
+            "updated_date": date.today().isoformat(),
+        }
+    )
+
+
+def render_completion_controls(lead_store: SessionLeadStore, lead: LeadRecord) -> None:
+    section_title("Record follow-up outcome")
+    with st.form(f"complete_{lead.lead_id}"):
+        a, b = st.columns(2)
+        with a:
+            outcome = st.selectbox("Outcome", OUTCOMES)
+        with b:
+            stage = st.selectbox("Update stage", LEAD_STATUSES, index=safe_index(LEAD_STATUSES, lead.lead_stage))
+        note = st.text_area("Last action note", value=f"Follow-up completed for {lead.customer_name}.")
+        submitted = st.form_submit_button("Mark follow-up complete", use_container_width=True)
+    if submitted:
+        adjusted = LeadRecord.from_mapping({**lead.to_dict(), "lead_stage": stage})
+        updated = complete_followup(adjusted, outcome, note)
+        lead_store.upsert(updated)
+        st.session_state["selected_lead_id"] = updated.lead_id
+        st.success("Follow-up marked complete and next recommendation recalculated.")
+        st.rerun()
+
+
+def render_latest_activity(lead: LeadRecord) -> None:
+    if not any([lead.outcome, lead.last_action, lead.outcome_note]):
+        return
+
+    section_title("Latest Follow-Up Activity")
+    activity = latest_followup_activity(lead)
+    for field, value in activity.items():
+        st.write(f"**{field}:** {value}")
+
+
+def scenario_date(scenario: dict) -> date:
+    if scenario.get("last_contact_date"):
+        parsed = LeadInput.from_mapping(scenario).last_contact_date
+        if parsed:
+            return parsed
+    return date.today() - timedelta(days=int(scenario.get("days_since", 1)))
+
+
+def build_inputs(scenario: dict) -> dict | None:
+    with st.form("followup_form"):
+        form_group("Customer and project details")
+        a, b = st.columns(2)
+        with a:
+            customer = st.text_input("Customer Name", value=scenario.get("customer_name", scenario.get("customer", "")))
+        with b:
+            company = st.text_input("Business / Team Name", value=scenario.get("company_name", scenario.get("company", "")))
+        c, d = st.columns(2)
+        with c:
+            project_type = st.selectbox(
+                "Service Type",
+                PROJECT_TYPES,
+                index=safe_index(PROJECT_TYPES, scenario.get("service_type", scenario.get("project_type", "Roof Replacement"))),
+            )
+        with d:
+            lead_status = st.selectbox("Lead Stage", LEAD_STATUSES, index=safe_index(LEAD_STATUSES, scenario.get("lead_stage", scenario.get("lead_status", "Estimate Sent"))))
+        context = st.text_area("Last Interaction / Context", value=scenario.get("context_notes", scenario.get("context", "")), height=120, max_chars=4000)
+        e, f, g, h = st.columns(4)
+        with e:
+            objection = st.selectbox("Main Concern", OBJECTIONS, index=safe_index(OBJECTIONS, scenario.get("objection", "Price")))
+        with f:
+            financing = st.selectbox("Financing?", FINANCING_OPTIONS, index=safe_index(FINANCING_OPTIONS, scenario.get("financing", "No")))
+        with g:
+            urgency = st.selectbox("Urgency", URGENCY_LEVELS, index=safe_index(URGENCY_LEVELS, scenario.get("urgency", "Medium")))
+        with h:
+            tone = st.selectbox("Tone", TONES, index=safe_index(TONES, scenario.get("tone", "Professional")))
+        i, j, k = st.columns(3)
+        with i:
+            last_contact_date = st.date_input("Last Contact Date", value=scenario_date(scenario), max_value=date.today())
+        with j:
+            intensity = st.selectbox("Follow-Up Intensity", FOLLOWUP_INTENSITIES, index=safe_index(FOLLOWUP_INTENSITIES, scenario.get("followup_intensity", scenario.get("intensity", "Standard"))))
+        with k:
+            channel = st.selectbox("Preferred Channel", CHANNEL_OPTIONS, index=safe_index(CHANNEL_OPTIONS, scenario.get("preferred_channel", scenario.get("channel", "All"))))
+        submitted = st.form_submit_button("Generate Follow-Up Plan", use_container_width=True)
+    if not submitted:
+        return None
+    return {
+        "customer_name": customer,
+        "company_name": company,
+        "service_type": project_type,
+        "lead_stage": lead_status,
+        "context_notes": context,
+        "objection": objection,
+        "financing": financing,
+        "urgency": urgency,
+        "tone": tone,
+        "last_contact_date": last_contact_date.isoformat(),
+        "days_since_last_contact": max(0, (date.today() - last_contact_date).days),
+        "followup_intensity": intensity,
+        "preferred_channel": channel,
+    }
+
+
+def render_followup_builder() -> None:
+    render_hero(
+        "Follow-Up Builder",
+        "The original single-lead generator remains available for quick one-off follow-up planning.",
+    )
+    st.markdown(f'<div class="note-box">{escape(PRIVACY_NOTE)}</div>', unsafe_allow_html=True)
+    scenario_name = st.selectbox("Load Sample Scenario", list(SAMPLE_SCENARIOS.keys()))
+    inputs = build_inputs(SAMPLE_SCENARIOS.get(scenario_name, {}))
+    if inputs is None:
+        st.info("Complete the form or load a sample scenario, then click Generate Follow-Up Plan.")
+        return
+    messages = validate_lead_input(inputs)
+    if messages:
+        st.warning("Please adjust the follow-up details before generating the plan.")
+        for message in messages:
+            st.write(f"- {message}")
+        return
+    outputs = enhance_outputs(inputs, run_followup_workflow(inputs))
+    render_results(outputs)
+    render_download(inputs, outputs, key="builder_download")
+
+
+def render_about() -> None:
+    render_hero(
+        "About This Demo",
+        "A fictional-data demonstration of follow-up discipline for local service teams.",
+    )
+    st.markdown(
+        """
+### Business problem
+Small service businesses often lose revenue because follow-up is inconsistent, CRM notes are thin, and managers cannot easily see which open leads are overdue.
+
+### What the rules engine does
+The deterministic workflow calculates priority, risk, next action, follow-up date, overdue state, communication drafts, CRM notes, and manager guidance from visible lead inputs.
+
+### Where optional AI is used
+When an OpenAI key is configured, AI can polish copy-center wording. It does not decide priority, risk, dates, or business outcomes. Without a key, deterministic fallback remains active.
+
+### Human review
+All outputs are drafts for human review. The app does not send email, send SMS, update a CRM, or schedule reminders.
+
+### Privacy
+This public demo is for fictional or approved non-sensitive data only. A production implementation would require authentication, tenant separation, durable storage, audit controls, CRM/email/SMS integration review, data-retention policy, and operational monitoring.
+"""
+    )
+
+
+def workspace_validation_messages(lead: LeadRecord) -> list[str]:
+    messages = validate_lead_input(lead.to_workflow_dict())
+    if lead.lead_stage == "Closed Lost":
+        messages = [message for message in messages if "Closed Lost leads default" not in message]
+    return messages
+
+
+def chart_data(values: dict[str, int | float], label: str, value_name: str) -> pd.DataFrame:
+    return pd.DataFrame([{label: key, value_name: value} for key, value in values.items()])
+
+
+def render_bar_chart(values: dict[str, int | float], label: str, value_name: str) -> None:
+    data = chart_data(values, label, value_name)
+    if data.empty:
+        st.info("No data available for this chart.")
+        return
+    chart = (
+        alt.Chart(data)
+        .mark_bar()
+        .encode(
+            x=alt.X(f"{label}:N", title=label, sort="-y"),
+            y=alt.Y(f"{value_name}:Q", title=value_name),
+            tooltip=[alt.Tooltip(f"{label}:N"), alt.Tooltip(f"{value_name}:Q")],
+        )
+        .properties(height=220)
+    )
+    st.altair_chart(chart, use_container_width=False)
+
+
+def money(value: int | float) -> str:
+    return f"${value:,.0f}"
+
+
+def safe_index(options: list[str], value: str) -> int:
+    return options.index(value) if value in options else 0
 
 
 def main() -> None:
-    render_sidebar()
-    render_hero()
-
-    section_title(
-        "Customer follow-up builder",
-        "Load a sample scenario or enter your own customer context. The app will generate a complete follow-up workflow.",
-    )
-    st.markdown(f'<div class="note-box">{escape(PRIVACY_NOTE)}</div>', unsafe_allow_html=True)
-
-    scenario_name = st.selectbox("Load Sample Scenario", list(SAMPLE_SCENARIOS.keys()))
-    scenario = SAMPLE_SCENARIOS.get(scenario_name, {})
-    inputs = build_inputs(scenario)
-
-    if inputs is None:
-        st.markdown(
-            '<div class="note-box">Complete the form or load a sample scenario, then click Generate Follow-Up Plan.</div>',
-            unsafe_allow_html=True,
-        )
-        return
-
-    validation_messages = validate_lead_input(inputs)
-    if validation_messages:
-        st.warning("Please adjust the follow-up details before generating the plan.")
-        for message in validation_messages:
-            st.write(f"- {message}")
-        return
-
-    outputs = enhance_outputs(inputs, run_followup_workflow(inputs))
-    render_results(outputs)
-    render_download(inputs, outputs)
-
-    section_title("What this app demonstrates")
-    portfolio_items = (
-        "<ul><li>Modular Streamlit architecture</li>"
-        "<li>AI-enhanced communication with rules-based fallback</li>"
-        "<li>Workflow mapping</li>"
-        "<li>Rules-based next-best-action logic</li>"
-        "<li>Sales communication generation</li>"
-        "<li>User-friendly PDF reporting</li></ul>"
-    )
-    html_card("Portfolio Skills Shown", portfolio_items, "workflow-card", body_is_html=True)
-
-    with st.expander("How to use FollowUpPilot AI"):
-        st.markdown(
-            "1. Load a sample scenario or enter your own customer/project context.\n"
-            "2. Generate the follow-up plan.\n"
-            "3. Use the Copy Center for text, email, voicemail, CRM note, and coaching note.\n"
-            "4. Review the follow-up date, overdue status, and timeline.\n"
-            "5. Download the PDF follow-up plan for CRM documentation or team coaching."
-        )
-    st.markdown(f'<div class="note-box">{escape(PRIVACY_NOTE)}</div>', unsafe_allow_html=True)
+    lead_store = store()
+    view = render_sidebar()
+    if view == "Manager Dashboard":
+        render_manager_dashboard(lead_store)
+    elif view == "Lead Workspace":
+        render_lead_workspace(lead_store)
+    elif view == "Follow-Up Builder":
+        render_followup_builder()
+    else:
+        render_about()
 
 
 if __name__ == "__main__":

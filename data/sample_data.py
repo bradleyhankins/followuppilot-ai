@@ -5,7 +5,12 @@ PROJECT_TYPES = [
     "Gutters",
     "Windows",
     "HVAC",
+    "Plumbing Repair",
+    "Electrical Service",
+    "Crawlspace Work",
     "Pest Control",
+    "Home Inspection",
+    "Remodeling Consultation",
     "General Home Service",
     "Other",
 ]
