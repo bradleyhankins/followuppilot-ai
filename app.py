@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from datetime import date, timedelta
 from html import escape
 
@@ -123,7 +124,50 @@ def priority_class(priority: str) -> str:
     return "status-neutral"
 
 
+NAVIGATION_OPTIONS = ["Manager Dashboard", "Lead Workspace", "Follow-Up Builder", "About This Demo"]
+DEFAULT_VIEW = "Manager Dashboard"
+NAVIGATION_KEY = "navigation_view"
+
+
+def normalize_view(view_name: object) -> str:
+    view = str(view_name or "").strip()
+    return view if view in NAVIGATION_OPTIONS else DEFAULT_VIEW
+
+
+def set_view_state(
+    state: MutableMapping[str, object],
+    view_name: str,
+    *,
+    sync_navigation_widget: bool = True,
+) -> str:
+    view = normalize_view(view_name)
+    state["view"] = view
+    if sync_navigation_widget:
+        state[NAVIGATION_KEY] = view
+    return view
+
+
+def set_view(view_name: str, *, sync_navigation_widget: bool = True) -> str:
+    return set_view_state(
+        st.session_state,
+        view_name,
+        sync_navigation_widget=sync_navigation_widget,
+    )
+
+
+def sync_view_from_navigation() -> None:
+    st.session_state["view"] = normalize_view(st.session_state.get(NAVIGATION_KEY))
+
+
+def route_for_view(view_name: object) -> str:
+    return normalize_view(view_name)
+
+
 def render_sidebar() -> str:
+    desired_view = normalize_view(st.session_state.get("view", DEFAULT_VIEW))
+    if st.session_state.get(NAVIGATION_KEY) != desired_view:
+        st.session_state[NAVIGATION_KEY] = desired_view
+    st.session_state["view"] = desired_view
     with st.sidebar:
         st.title("FollowUpPilot AI")
         st.caption("Version 4.0 workspace")
@@ -131,15 +175,14 @@ def render_sidebar() -> str:
         st.divider()
         view = st.radio(
             "Navigation",
-            ["Manager Dashboard", "Lead Workspace", "Follow-Up Builder", "About This Demo"],
-            index=["Manager Dashboard", "Lead Workspace", "Follow-Up Builder", "About This Demo"].index(
-                st.session_state.get("view", "Manager Dashboard")
-            ),
+            NAVIGATION_OPTIONS,
+            key=NAVIGATION_KEY,
+            on_change=sync_view_from_navigation,
         )
-        st.session_state["view"] = view
+        st.session_state["view"] = normalize_view(view)
         st.divider()
         st.markdown(PRIVACY_NOTE)
-    return view
+    return st.session_state["view"]
 
 
 def render_hero(title: str, subtitle: str) -> None:
@@ -159,6 +202,22 @@ def lead_selector_label(lead: LeadRecord) -> str:
 
 def lead_id_from_selector_label(label: str) -> str:
     return label.split(" - ", 1)[0].strip()
+
+
+def open_lead_in_workspace(
+    state: MutableMapping[str, object],
+    selected_label: str,
+    *,
+    sync_navigation_widget: bool = True,
+) -> str:
+    lead_id = lead_id_from_selector_label(selected_label)
+    state["selected_lead_id"] = lead_id
+    set_view_state(
+        state,
+        "Lead Workspace",
+        sync_navigation_widget=sync_navigation_widget,
+    )
+    return lead_id
 
 
 def output_widget_keys(prefix: str) -> dict[str, str]:
@@ -410,8 +469,11 @@ def render_lead_table(lead_store: SessionLeadStore) -> None:
         [f"{lead.lead_id} - {lead.customer_name} ({lead.service_type})" for lead in filtered],
     )
     if st.button("Open selected lead", use_container_width=True):
-        st.session_state["selected_lead_id"] = selected_label.split(" - ")[0]
-        st.session_state["view"] = "Lead Workspace"
+        open_lead_in_workspace(
+            st.session_state,
+            selected_label,
+            sync_navigation_widget=False,
+        )
         st.rerun()
 
 
@@ -734,7 +796,7 @@ def safe_index(options: list[str], value: str) -> int:
 
 def main() -> None:
     lead_store = store()
-    view = render_sidebar()
+    view = route_for_view(render_sidebar())
     if view == "Manager Dashboard":
         render_manager_dashboard(lead_store)
     elif view == "Lead Workspace":
