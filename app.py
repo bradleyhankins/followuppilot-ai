@@ -150,11 +150,81 @@ def render_hero(title: str, subtitle: str) -> None:
     )
 
 
-def enhance_outputs(inputs: dict, outputs: dict) -> dict:
+WORKSPACE_SELECTOR_KEY = "workspace_lead_selector"
+
+
+def lead_selector_label(lead: LeadRecord) -> str:
+    return f"{lead.lead_id} - {lead.customer_name} ({lead.service_type})"
+
+
+def lead_id_from_selector_label(label: str) -> str:
+    return label.split(" - ", 1)[0].strip()
+
+
+def output_widget_keys(prefix: str) -> dict[str, str]:
+    safe_prefix = prefix.strip() or "followup"
+    return {
+        "sms": f"{safe_prefix}_sms",
+        "subject": f"{safe_prefix}_email_subject",
+        "email": f"{safe_prefix}_email_body",
+        "voicemail": f"{safe_prefix}_voicemail",
+        "crm": f"{safe_prefix}_crm",
+        "coaching": f"{safe_prefix}_coaching",
+        "call": f"{safe_prefix}_call",
+    }
+
+
+def ai_cache_context(inputs: dict, context_key: str) -> dict:
+    return {
+        "context_key": context_key,
+        "customer_name": inputs.get("customer_name", ""),
+        "company_name": inputs.get("company_name", ""),
+        "service_type": inputs.get("service_type", ""),
+        "lead_stage": inputs.get("lead_stage", ""),
+        "context_notes": inputs.get("context_notes", ""),
+        "objection": inputs.get("objection", ""),
+        "urgency": inputs.get("urgency", ""),
+        "financing": inputs.get("financing", ""),
+        "tone": inputs.get("tone", ""),
+        "preferred_channel": inputs.get("preferred_channel", ""),
+        "followup_intensity": inputs.get("followup_intensity", ""),
+        "last_contact_date": inputs.get("last_contact_date", ""),
+        "estimate_amount": inputs.get("estimate_amount", ""),
+    }
+
+
+def resolve_selected_lead(leads: list[LeadRecord], selected_id: str | None) -> LeadRecord:
+    return next((lead for lead in leads if lead.lead_id == selected_id), leads[0])
+
+
+def sync_selected_lead_id_from_selector() -> None:
+    st.session_state["selected_lead_id"] = lead_id_from_selector_label(
+        st.session_state.get(WORKSPACE_SELECTOR_KEY, "")
+    )
+
+
+def prepare_workspace_selector(leads: list[LeadRecord]) -> list[str]:
+    labels = [lead_selector_label(lead) for lead in leads]
+    selected = resolve_selected_lead(leads, st.session_state.get("selected_lead_id"))
+    selected_label = lead_selector_label(selected)
+    current_label = st.session_state.get(WORKSPACE_SELECTOR_KEY)
+    if current_label not in labels or lead_id_from_selector_label(current_label) != selected.lead_id:
+        st.session_state[WORKSPACE_SELECTOR_KEY] = selected_label
+    st.session_state["selected_lead_id"] = selected.lead_id
+    return labels
+
+
+def build_workspace_plan(lead: LeadRecord) -> tuple[dict, dict]:
+    inputs = lead.to_workflow_dict()
+    plan = run_followup_workflow(inputs)
+    return inputs, enhance_outputs(inputs, plan, context_key=f"workspace_{lead.lead_id}")
+
+
+def enhance_outputs(inputs: dict, outputs: dict, context_key: str = "builder") -> dict:
     raw = enhance_text(
         ai_copy_prompt(inputs, outputs),
         "",
-        stable_cache_key("followup_copy", inputs),
+        stable_cache_key("followup_copy", ai_cache_context(inputs, context_key)),
     )
     if not raw:
         return outputs
@@ -162,7 +232,8 @@ def enhance_outputs(inputs: dict, outputs: dict) -> dict:
     return outputs
 
 
-def render_results(outputs: dict) -> None:
+def render_results(outputs: dict, key_prefix: str = "followup") -> None:
+    keys = output_widget_keys(key_prefix)
     section_title("Follow-up recommendation")
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -195,16 +266,16 @@ def render_results(outputs: dict) -> None:
     section_title("Copy center", "Copy-ready outputs for customer communication and CRM documentation.")
     tabs = st.tabs(["Text", "Email", "Voicemail", "CRM Note", "Manager Coaching Note"])
     with tabs[0]:
-        st.text_area("Text", outputs["sms"], height=145)
+        st.text_area("Text", outputs["sms"], height=145, key=keys["sms"])
     with tabs[1]:
-        st.text_input("Email Subject", outputs["subject"])
-        st.text_area("Email Body", outputs["email"], height=250)
+        st.text_input("Email Subject", outputs["subject"], key=keys["subject"])
+        st.text_area("Email Body", outputs["email"], height=250, key=keys["email"])
     with tabs[2]:
-        st.text_area("Voicemail", outputs["voicemail"], height=145)
+        st.text_area("Voicemail", outputs["voicemail"], height=145, key=keys["voicemail"])
     with tabs[3]:
-        st.text_area("CRM Note", outputs["crm"], height=250)
+        st.text_area("CRM Note", outputs["crm"], height=250, key=keys["crm"])
     with tabs[4]:
-        st.text_area("Manager Coaching Note", outputs["coaching"], height=145)
+        st.text_area("Manager Coaching Note", outputs["coaching"], height=145, key=keys["coaching"])
 
     section_title("Follow-up timeline")
     cols = st.columns(2)
@@ -215,7 +286,7 @@ def render_results(outputs: dict) -> None:
     section_title("Call workflow and objection guidance")
     left, right = st.columns(2)
     with left:
-        st.text_area("Call script", outputs["call"], height=285)
+        st.text_area("Call script", outputs["call"], height=285, key=keys["call"])
     with right:
         html_card("Objection Guidance", outputs["guidance"], "guidance-card")
 
@@ -383,11 +454,15 @@ def render_lead_workspace(lead_store: SessionLeadStore) -> None:
     if not leads:
         st.info("No leads are loaded. Import a CSV or reset the demo data from the dashboard.")
         return
-    labels = [f"{lead.lead_id} - {lead.customer_name} ({lead.service_type})" for lead in leads]
-    default_id = st.session_state.get("selected_lead_id", leads[0].lead_id)
-    default_index = next((i for i, lead in enumerate(leads) if lead.lead_id == default_id), 0)
-    selected = st.selectbox("Choose lead", labels, index=default_index)
-    lead = lead_store.get(selected.split(" - ")[0])
+    labels = prepare_workspace_selector(leads)
+    st.selectbox(
+        "Choose lead",
+        labels,
+        key=WORKSPACE_SELECTOR_KEY,
+        on_change=sync_selected_lead_id_from_selector,
+    )
+    selected_id = st.session_state.get("selected_lead_id")
+    lead = lead_store.get(selected_id) if selected_id else None
     if lead is None:
         st.warning("Selected lead could not be found.")
         return
@@ -406,10 +481,11 @@ def render_lead_workspace(lead_store: SessionLeadStore) -> None:
             st.success("Lead saved and follow-up plan refreshed.")
             lead = refreshed
 
-    plan = enhance_outputs(lead.to_workflow_dict(), run_followup_workflow(lead.to_workflow_dict()))
+    lead = lead_store.get(lead.lead_id) or lead
+    inputs, plan = build_workspace_plan(lead)
     render_latest_activity(lead)
-    render_results(plan)
-    render_download(lead.to_workflow_dict(), plan, key=f"download_{lead.lead_id}")
+    render_results(plan, key_prefix=f"workspace_{lead.lead_id}")
+    render_download(inputs, plan, key=f"download_{lead.lead_id}")
     render_completion_controls(lead_store, lead)
 
 
@@ -596,8 +672,8 @@ def render_followup_builder() -> None:
         for message in messages:
             st.write(f"- {message}")
         return
-    outputs = enhance_outputs(inputs, run_followup_workflow(inputs))
-    render_results(outputs)
+    outputs = enhance_outputs(inputs, run_followup_workflow(inputs), context_key=f"builder_{scenario_name}")
+    render_results(outputs, key_prefix=f"builder_{scenario_name}")
     render_download(inputs, outputs, key="builder_download")
 
 
