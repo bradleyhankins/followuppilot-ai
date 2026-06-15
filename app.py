@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import date, timedelta
 from html import escape
 
-import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -643,17 +642,10 @@ def render_bar_chart(values: dict[str, int | float], label: str, value_name: str
     if data.empty:
         st.info("No data available for this chart.")
         return
-    chart = (
-        alt.Chart(data)
-        .mark_bar()
-        .encode(
-            x=alt.X(f"{label}:N", title=label, sort="-y"),
-            y=alt.Y(f"{value_name}:Q", title=value_name),
-            tooltip=[alt.Tooltip(f"{label}:N"), alt.Tooltip(f"{value_name}:Q")],
-        )
-        .properties(height=220)
-    )
-    st.altair_chart(chart, use_container_width=False)
+    try:
+        st.bar_chart(data, x=label, y=value_name)
+    except Exception:
+        st.table(data)
 
 
 def money(value: int | float) -> str:
