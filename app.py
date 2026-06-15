@@ -275,8 +275,7 @@ def prepare_workspace_selector(leads: list[LeadRecord]) -> list[str]:
 
 def build_workspace_plan(lead: LeadRecord) -> tuple[dict, dict]:
     inputs = lead.to_workflow_dict()
-    plan = run_followup_workflow(inputs)
-    return inputs, enhance_outputs(inputs, plan, context_key=f"workspace_{lead.lead_id}")
+    return inputs, run_followup_workflow(inputs)
 
 
 def enhance_outputs(inputs: dict, outputs: dict, context_key: str = "builder") -> dict:

@@ -79,6 +79,22 @@ def test_workspace_plan_uses_newly_selected_won_lead_after_active_lead():
     assert "Avery" not in won_plan["sms"]
 
 
+def test_workspace_plan_does_not_block_on_ai_enhancement(monkeypatch):
+    item = lead(lead_id="FUP-1004", customer_name="Taylor Brooks", service_type="Windows")
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError("workspace plans must render deterministic output before optional AI")
+
+    monkeypatch.setattr("app.enhance_outputs", fail_if_called)
+
+    inputs, plan = build_workspace_plan(item)
+
+    assert inputs["customer_name"] == "Taylor Brooks"
+    assert "Taylor" in plan["sms"]
+    assert plan["subject"]
+    assert "Taylor" in plan["email"]
+
+
 def test_workspace_plan_uses_newly_selected_closed_lost_lead_after_active_lead():
     active = lead(lead_id="FUP-ACTIVE", lead_stage="Decision Pending", customer_name="Avery Johnson")
     closed = lead(lead_id="FUP-1011", lead_stage="Closed Lost", customer_name="Morgan Lee")
