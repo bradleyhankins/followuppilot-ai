@@ -1,93 +1,68 @@
 # Architecture
 
-FollowUpPilot AI is a Streamlit sales follow-up workflow assistant for field-sales and home-service teams.
+FollowUpPilot AI is a Streamlit-based public demonstration of a sales follow-up workflow assistant for home-service and local service businesses.
 
-## Current Architecture
+The near-term interface is Streamlit. The core logic is intentionally modular so the deterministic workflow can later move into a private multi-user application.
 
-The current version is optimized for simple Streamlit Community Cloud deployment and easy GitHub review.
-
-```text
-app.py
-README.md
-requirements.txt
-screenshots/
-```
-
-## Application Layers
-
-The app is currently deployed from one Streamlit entrypoint, but the code is organized conceptually into clear layers:
+## Layers
 
 ```text
-Configuration
-- Project types
-- Lead statuses
-- Objection categories
-- Tone options
-- Sample scenarios
+Streamlit UI
+- form inputs
+- validation messages
+- recommendation and copy-center rendering
+- PDF download
 
-Business Logic
-- Priority scoring
-- Lead temperature logic
-- Deal risk classification
-- Next-best-action recommendation
-- Objection guidance
-- Follow-up sequence generation
+Domain models and validation
+- LeadInput
+- GeneratedCopy
+- FollowupPlan
+- user-friendly validation messages
 
-Communication Generation
-- Text message generation
-- Email generation
-- Voicemail script generation
-- CRM note generation
-- Call script generation
-- Manager coaching note generation
+Rules engine
+- priority scoring
+- lead temperature
+- deal risk
+- lead-stage behavior
+- suggested follow-up date
+- overdue/due-today/upcoming status
+- channel-specific next action
+- deterministic fallback copy
+
+Optional AI enhancement
+- prompt construction
+- JSON-first response parsing
+- safe diagnostic handling
+- deterministic fallback when unavailable
 
 Reporting
-- Downloadable Markdown follow-up plan
-
-Presentation
-- Streamlit builder form
-- Recommendation snapshot
-- Copy center
-- Timeline cards
-- Tabs and output sections
+- report text builder
+- PDF generation
 ```
 
-## Design Choices
+## Data Flow
 
-FollowUpPilot uses rules-based workflow logic so the output remains transparent, editable, and easy to understand.
+1. A user loads a sample scenario or enters lead details in Streamlit.
+2. `core.models.LeadInput` normalizes current and legacy field names.
+3. `core.validation.validate_lead_input` returns user-friendly messages before generation.
+4. `core.followup_logic.run_followup_workflow` creates the deterministic follow-up plan.
+5. `ai_helpers.enhance_text` optionally improves copy-center text if `OPENAI_API_KEY` or `OPENAI_TOKEN` is configured.
+6. The app renders escaped outputs and offers a PDF export.
 
-Key design goals:
+## Preserved Design Choices
 
-- Improve follow-up consistency
-- Support sales reps with copy-ready communication
-- Improve CRM note quality
-- Provide manager coaching context
-- Keep all sample data fictional and public-safe
+- Rules-first deterministic behavior
+- Optional AI copy polish
+- Graceful no-AI fallback
+- Public-safe fictional sample data
+- Copy-center workflow
+- PDF export
+- Privacy-forward positioning
 
-## Why Single-File for This Version
+## Current Non-Goals
 
-The current single-file version keeps deployment simple for a portfolio app. A future production version would separate configuration, logic, components, and reports.
+This phase does not add a production database, authentication, billing, scheduled jobs, direct CRM integration, or a private manager dashboard.
 
-## Future Production Layout
+## Future Direction
 
-```text
-app.py
-src/
-  config.py
-  scoring.py
-  message_generation.py
-  reports.py
-  components.py
-  styles.css
-tests/
-  test_scoring.py
-  test_message_generation.py
-```
-
-## Future Refactor Plan
-
-1. Move CSS into `styles.css`
-2. Move lead scoring into `src/scoring.py`
-3. Move message generation into `src/message_generation.py`
-4. Move report generation into `src/reports.py`
-5. Add unit tests for priority, temperature, and deal-risk logic
+The next practical architecture step is a persisted lead-list layer that can power manager visibility into open and overdue follow-up without changing the scoring and copy-generation core.

@@ -2,52 +2,33 @@
 
 ## Build Philosophy
 
-FollowUpPilot AI is designed as a practical workflow assistant for sales follow-up execution.
-
-The app focuses on repeatable workflow support rather than opaque automation.
+FollowUpPilot AI is designed as a practical workflow assistant, not an opaque automation system. The deterministic workflow should always be understandable, testable, and useful without AI.
 
 ## Engineering Priorities
 
-1. Clear user workflow
-2. Transparent scoring and recommendation rules
-3. Copy-ready communication outputs
-4. CRM documentation support
-5. Public-safe sample scenarios
-6. Simple deployment on Streamlit Community Cloud
+1. Preserve rules-first behavior.
+2. Keep AI optional and bounded.
+3. Validate inputs with user-friendly messages.
+4. Treat the public demo as non-confidential.
+5. Keep the Streamlit UI thin over reusable core logic.
+6. Add tests before broadening the product surface.
 
-## Current Tradeoffs
+## Current Foundation
 
-The deployed portfolio version keeps the app in a single Streamlit entrypoint for simplicity. This makes it easy to run and review, while a future production version would split message generation and scoring into separate modules.
+The app now has typed domain models, validation, deterministic follow-up date logic, overdue state, lead-stage-specific behavior, channel-specific next actions, safer HTML rendering, AI fallback diagnostics, JSON-first AI parsing, PDF error handling, and expanded tests.
 
-## Future Refactor Plan
+## Local Checks
 
-A future production-oriented version should split the app into:
-
-```text
-src/config.py
-src/scoring.py
-src/message_generation.py
-src/reports.py
-src/components.py
-src/styles.css
+```bash
+py -m pytest -q
+py -m ruff check .
+py -c "import app; import core.followup_logic; import core.validation"
 ```
 
-## Testing Opportunities
+## Future Refactor Opportunities
 
-The most valuable future tests would cover:
-
-- Priority score calculation
-- Lead temperature classification
-- Deal risk classification
-- Next-best-action selection
-- Follow-up sequence generation
-- Markdown report generation
-
-## Code Quality Roadmap
-
-Potential future tooling:
-
-- Ruff for linting and formatting
-- Pytest for business logic tests
-- Pre-commit hooks
-- GitHub Actions smoke checks
+- Move Streamlit styling into a separate CSS asset.
+- Split deterministic copy templates from scoring logic.
+- Add a session or CSV-backed lead list for manager visibility.
+- Add UI smoke tests when the interface becomes more complex.
+- Add generated screenshot refresh steps for portfolio documentation.

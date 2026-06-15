@@ -8,6 +8,11 @@ __pycache__/
 venv/
 env/
 ENV/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
 
 # Streamlit
 .streamlit/secrets.toml
@@ -28,3 +33,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp

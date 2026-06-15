@@ -2,101 +2,49 @@
 
 ## Overview
 
-FollowUpPilot AI is an AI-assisted follow-up workflow tool for field-sales and home-service teams. It helps sales representatives and managers turn customer context into follow-up texts, emails, CRM-ready notes, call scripts, objection guidance, manager coaching notes, follow-up sequences, and downloadable follow-up plans.
+FollowUpPilot AI is a portfolio demonstration of a follow-up workflow assistant for home-service and local service businesses. It helps teams standardize what happens after a lead, appointment, estimate, or decision-stage conversation.
 
 ## Problem
 
-Small and mid-sized home-service businesses often lose revenue because follow-up is inconsistent and customer communication depends heavily on each individual representative.
+Small service businesses often lose revenue because follow-up is inconsistent:
 
-Common problems include:
-
-- Reps delaying follow-up after estimates or proposals
-- Inconsistent message quality
-- CRM notes that lack useful detail
-- Weak objection handling
-- No repeatable follow-up sequence
-- Managers lacking visibility into what should happen next
-- Missed opportunities caused by poor next-step discipline
+- reps delay follow-up after estimates
+- message quality varies by rep
+- CRM notes miss key context
+- objections are not handled consistently
+- managers lack visibility into next steps
+- open leads can become overdue without a clear signal
 
 ## Solution
 
-FollowUpPilot AI creates a structured workflow for customer follow-up.
+FollowUpPilot AI turns lead context into a structured follow-up plan. The app combines deterministic rules with optional AI-enhanced wording.
 
-A user enters customer-safe project context, including:
+The user enters lead details, stage, notes, urgency, objection, last-contact date, and preferred channel. The app returns a recommended next action, suggested follow-up date, overdue status, customer-ready copy, CRM note, coaching note, and PDF report.
 
-- Project type
-- Lead status
-- Last interaction
-- Main objection or concern
-- Financing status
-- Urgency level
-- Preferred tone
+## Current Features
 
-The app then generates practical outputs the sales team can immediately use.
+- typed lead input model
+- user-friendly validation
+- lead-stage handling for New Lead, Contacted, Appointment Set, Estimate Sent, Decision Pending, Won, and Closed Lost
+- priority score and timing
+- follow-up date suggestion
+- overdue, due-today, and upcoming status
+- channel-specific next action
+- text, email, voicemail, CRM note, and manager coaching note
+- call script and objection guidance
+- public-safe sample scenarios
+- PDF follow-up plan
+- optional OpenAI enhancement with deterministic fallback
+- pytest, Ruff, and CI smoke checks
 
-## Features
+## Business Value
 
-- Follow-up priority score
-- Recommended timing
-- Copy-ready customer text message
-- Copy-ready customer email
-- CRM-ready note
-- Call script
-- Objection-handling guidance
-- Manager coaching note
-- Multi-touch follow-up sequence
-- Downloadable Markdown follow-up plan
-- Privacy note for user-entered information
+The project demonstrates how lightweight workflow automation can improve follow-up consistency, CRM discipline, customer communication, and manager coaching without requiring an enterprise CRM build.
 
-## Tech Stack
+## Current Limitations
 
-- Python
-- Streamlit
-- Rules-based AI-style workflow logic
-- Markdown report export
-- GitHub
-- Streamlit Community Cloud
-
-## My Role
-
-I built the project from concept to deployment.
-
-Responsibilities included:
-
-- Identifying the business problem
-- Designing the follow-up workflow
-- Mapping lead statuses and objections
-- Writing message-generation logic
-- Building the Streamlit interface
-- Creating downloadable reports
-- Documenting the project
-- Preparing fictional sample data for public portfolio use
-- Publishing to GitHub
-- Deploying the live app
-
-## Business Impact
-
-FollowUpPilot AI demonstrates how lightweight AI-assisted workflows can improve sales execution without requiring complex enterprise software.
-
-Potential benefits include:
-
-- Faster customer follow-up
-- Better CRM documentation
-- More consistent sales communication
-- Stronger objection handling
-- Better manager coaching
-- Reduced missed opportunities
-- More repeatable revenue operations processes
+This is still a public Streamlit demo. It does not include authentication, saved lead lists, team dashboards, reminders, CRM sync, or a production database.
 
 ## Future Roadmap
 
-Future versions could include:
-
-- OpenAI API-generated messaging
-- PDF report downloads
-- Saved templates by project type
-- CRM integration
-- Follow-up scheduling
-- Lead CSV upload
-- Team-level reporting
-- Rep coaching dashboards
+Likely next improvements include CSV lead upload, a session-based manager table, open/overdue lead summaries, better demo screenshots, and eventually a private deployment path.

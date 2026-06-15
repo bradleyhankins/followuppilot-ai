@@ -2,47 +2,50 @@
 
 ```text
 .
-├── app.py                  # Streamlit application entrypoint
-├── README.md               # Project overview, case study, and test flow
-├── ARCHITECTURE.md         # Architecture and design decisions
-├── PROJECT_STRUCTURE.md    # Repository structure reference
-├── DEVELOPMENT_NOTES.md    # Implementation notes and future refactor plan
-├── requirements.txt        # Python dependencies
-└── screenshots/            # README screenshots
+├── app.py
+├── ai_helpers.py
+├── pdf_helpers.py
+├── README.md
+├── ARCHITECTURE.md
+├── CASE_STUDY.md
+├── DEVELOPMENT_NOTES.md
+├── PRIVACY_AND_AI_USE.md
+├── PROJECT_STRUCTURE.md
+├── requirements.txt
+├── pyproject.toml
+├── .github/
+│   └── workflows/
+│       └── python-tests.yml
+├── .streamlit/
+│   └── config.toml
+├── core/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── validation.py
+│   ├── followup_logic.py
+│   ├── prompts.py
+│   └── report_builder.py
+├── data/
+│   ├── __init__.py
+│   └── sample_data.py
+├── screenshots/
+└── tests/
+    ├── test_ai_helpers.py
+    ├── test_followup_logic.py
+    ├── test_reports.py
+    ├── test_sample_data.py
+    └── test_validation.py
 ```
 
-## Current File Responsibilities
+## File Responsibilities
 
-### `app.py`
-
-Contains the deployed Streamlit workflow app.
-
-Responsibilities:
-
-- Page configuration
-- Sample scenarios
-- Lead scoring logic
-- Deal risk and lead temperature logic
-- Communication generation
-- Copy center output
-- Timeline generation
-- Markdown follow-up plan export
-- Streamlit UI rendering
-
-## Future Production Structure
-
-```text
-app.py
-src/
-  config.py
-  scoring.py
-  message_generation.py
-  reports.py
-  components.py
-  styles.css
-tests/
-  test_scoring.py
-  test_message_generation.py
-```
-
-The current structure prioritizes fast portfolio review and live deployment while documenting the path to a modular production build.
+- `app.py`: Streamlit app and orchestration.
+- `core/models.py`: typed dataclasses for the workflow domain.
+- `core/validation.py`: validation rules and user-facing messages.
+- `core/followup_logic.py`: deterministic scoring, follow-up, stage, copy, and next-action rules.
+- `core/prompts.py`: AI prompt and response parsing helpers.
+- `core/report_builder.py`: report text builder for PDF export.
+- `ai_helpers.py`: OpenAI key lookup, prompt trimming, diagnostics, and fallback.
+- `pdf_helpers.py`: ReportLab PDF rendering.
+- `data/sample_data.py`: dropdown options and fictional demo scenarios.
+- `tests/`: deterministic unit and smoke coverage.
