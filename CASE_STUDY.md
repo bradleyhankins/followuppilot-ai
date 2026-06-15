@@ -1,50 +1,35 @@
 # FollowUpPilot AI Case Study
 
-## Overview
-
-FollowUpPilot AI is a portfolio demonstration of a follow-up workflow assistant for home-service and local service businesses. It helps teams standardize what happens after a lead, appointment, estimate, or decision-stage conversation.
-
 ## Problem
 
-Small service businesses often lose revenue because follow-up is inconsistent:
-
-- reps delay follow-up after estimates
-- message quality varies by rep
-- CRM notes miss key context
-- objections are not handled consistently
-- managers lack visibility into next steps
-- open leads can become overdue without a clear signal
+Local service businesses often lose revenue after estimates because follow-up is inconsistent, managers lack visibility into overdue work, and CRM notes do not clearly explain the next step.
 
 ## Solution
 
-FollowUpPilot AI turns lead context into a structured follow-up plan. The app combines deterministic rules with optional AI-enhanced wording.
+FollowUpPilot AI demonstrates a follow-up operating system:
 
-The user enters lead details, stage, notes, urgency, objection, last-contact date, and preferred channel. The app returns a recommended next action, suggested follow-up date, overdue status, customer-ready copy, CRM note, coaching note, and PDF report.
+- managers see overdue leads, due-today work, active pipeline, won value, and rep workload
+- reps work one lead at a time in a guided workspace
+- deterministic rules generate follow-up plans, messages, CRM notes, call scripts, and manager coaching notes
+- optional AI can polish copy without owning business decisions
 
-## Current Features
+## Phase 2 Features
 
-- typed lead input model
-- user-friendly validation
-- lead-stage handling for New Lead, Contacted, Appointment Set, Estimate Sent, Decision Pending, Won, and Closed Lost
-- priority score and timing
-- follow-up date suggestion
-- overdue, due-today, and upcoming status
-- channel-specific next action
-- text, email, voicemail, CRM note, and manager coaching note
-- call script and objection guidance
-- public-safe sample scenarios
-- PDF follow-up plan
-- optional OpenAI enhancement with deterministic fallback
-- pytest, Ruff, and CI smoke checks
-
-## Business Value
-
-The project demonstrates how lightweight workflow automation can improve follow-up consistency, CRM discipline, customer communication, and manager coaching without requiring an enterprise CRM build.
+- fictional managed lead list
+- manager dashboard
+- lead workspace
+- manager attention flags
+- lead filters and sorting
+- CSV template, import, and export
+- session-only persistence
+- follow-up completion and outcome handling
+- next follow-up recalculation
+- PDF report downloads
 
 ## Current Limitations
 
-This is still a public Streamlit demo. It does not include authentication, saved lead lists, team dashboards, reminders, CRM sync, or a production database.
+This is still a public portfolio demo. It intentionally does not include authentication, durable multi-user storage, live messaging, scheduled reminders, CRM sync, or real customer data.
 
-## Future Roadmap
+## Production Path
 
-Likely next improvements include CSV lead upload, a session-based manager table, open/overdue lead summaries, better demo screenshots, and eventually a private deployment path.
+A production implementation would add a real database, user accounts, role-based access, integrations, audit logs, privacy controls, monitored background jobs, and deployment hardening.

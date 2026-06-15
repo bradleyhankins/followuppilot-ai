@@ -15,7 +15,7 @@ FollowUpPilot AI is designed as a practical workflow assistant, not an opaque au
 
 ## Current Foundation
 
-The app now has typed domain models, validation, deterministic follow-up date logic, overdue state, lead-stage-specific behavior, channel-specific next actions, safer HTML rendering, AI fallback diagnostics, JSON-first AI parsing, PDF error handling, and expanded tests.
+The app now has typed domain models, validation, deterministic follow-up date logic, overdue state, lead-stage-specific behavior, channel-specific next actions, safer HTML rendering, AI fallback diagnostics, JSON-first AI parsing, PDF error handling, a session-backed lead workspace, CSV import/export, manager dashboard metrics, attention flags, and expanded tests.
 
 ## Local Checks
 
@@ -29,6 +29,6 @@ py -c "import app; import core.followup_logic; import core.validation"
 
 - Move Streamlit styling into a separate CSS asset.
 - Split deterministic copy templates from scoring logic.
-- Add a session or CSV-backed lead list for manager visibility.
 - Add UI smoke tests when the interface becomes more complex.
+- Replace session persistence with SQLite or PostgreSQL when moving beyond public demo mode.
 - Add generated screenshot refresh steps for portfolio documentation.

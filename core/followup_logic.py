@@ -16,7 +16,12 @@ def value_statement(service_type: str) -> str:
         "Gutters": "moving water away from the home to protect fascia, foundation, and landscaping",
         "Windows": "improving comfort, energy efficiency, and curb appeal",
         "HVAC": "improving comfort, reliability, and energy performance",
+        "Plumbing Repair": "protecting the property from water damage and restoring reliability",
+        "Electrical Service": "improving safety, reliability, and code-ready electrical performance",
+        "Crawlspace Work": "protecting the home from moisture, air-quality, and structural concerns",
         "Pest Control": "protecting the home and preventing the issue from spreading",
+        "Home Inspection": "giving the customer a clear understanding of condition, risk, and next steps",
+        "Remodeling Consultation": "helping the customer plan scope, budget, timeline, and confidence",
         "General Home Service": "protecting the home and creating a clear path forward",
         "Other": "making sure the project is handled correctly",
     }.get(service_type, "making sure the project is handled correctly")
@@ -35,7 +40,7 @@ def calculate_priority(
     if stage == "Closed Lost":
         return "No Active Follow-Up", "No active follow-up recommended", 0
     if stage == "Won":
-        return "Customer Won", "Handoff or post-sale check-in only", 0
+        return "Customer Won", "No active sales follow-up", 0
 
     score = 0
     score += {
@@ -93,7 +98,7 @@ def suggest_followup_date(lead: LeadInput, priority: str, today: date | None = N
     if lead.lead_stage == "Closed Lost" and lead.followup_intensity != "Last Attempt":
         return None
     if lead.lead_stage == "Won":
-        return today + timedelta(days=7)
+        return None
 
     stage_days = {
         "New Lead": 0,
@@ -138,7 +143,7 @@ def next_best_action(inputs: dict[str, Any], priority: str, deal_risk: str | Non
             return "Send one respectful close-the-loop or reactivation message, then pause active sales follow-up."
         return "No active sales follow-up recommended. Keep the lead closed unless the customer re-engages or a nurture campaign is explicitly selected."
     if lead.lead_stage == "Won":
-        return "Do not run active sales follow-up. Move to post-sale handoff, scheduling, or satisfaction check-in."
+        return "Do not run active sales follow-up. Move to onboarding, production handoff, project kickoff, or customer care."
 
     channel_actions = {
         "Phone Call": "Call first and document the outcome in the CRM.",
@@ -259,7 +264,7 @@ def manager_note(objection: str, priority: str) -> str:
         "Medium Priority": "This lead should be followed up within 24 hours before momentum drops.",
         "Low Priority": "This lead can be followed up within 48-72 hours, but should not be ignored.",
         "No Active Follow-Up": "This lead is closed lost and should not receive active sales follow-up by default.",
-        "Customer Won": "This customer should move to post-sale handoff or customer success follow-up.",
+        "Customer Won": "This customer should move to onboarding, production handoff, project kickoff, or customer care.",
     }.get(priority, "Review and assign a clear next step.")
     return f"{urgency} Coach the rep to clarify the true concern, rebuild value, and secure a specific next step when active follow-up is appropriate."
 
@@ -274,7 +279,7 @@ def followup_sequence(inputs: dict[str, Any]) -> dict[str, str]:
         }
     if lead.lead_stage == "Won":
         return {
-            "Post-Sale Handoff": "Confirm scheduling, installation, or service expectations and document the next operational step."
+            "Non-Sales Handoff": "Confirm onboarding, production handoff, project kickoff, or customer care ownership."
         }
     if lead.followup_intensity == "Light Touch":
         return {
@@ -360,6 +365,12 @@ def run_followup_workflow(inputs: dict[str, Any], today: date | None = None) -> 
     status, is_overdue, due_today, upcoming, days_overdue = followup_status(
         suggested_date, today=today
     )
+    if lead.lead_stage == "Won":
+        status = "No Active Sales Follow-Up"
+        is_overdue = False
+        due_today = False
+        upcoming = False
+        days_overdue = 0
     next_action = next_best_action(workflow_inputs, priority, deal_risk)
     if lead.lead_stage == "Closed Lost":
         why = "This lead is Closed Lost, so active sales follow-up is paused unless reactivation is explicitly selected."

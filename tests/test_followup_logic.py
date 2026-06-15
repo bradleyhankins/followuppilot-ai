@@ -123,7 +123,13 @@ def test_won_moves_to_post_sale_handoff():
     )
 
     assert outputs["priority"] == "Customer Won"
-    assert "post-sale" in outputs["next_action"].lower()
+    assert outputs["followup_status"] == "No Active Sales Follow-Up"
+    assert outputs["suggested_followup_date"] is None
+    assert not outputs["is_overdue"]
+    assert not outputs["due_today"]
+    assert not outputs["upcoming_followup"]
+    assert "active sales" in outputs["next_action"].lower()
+    assert any(term in outputs["next_action"].lower() for term in ["onboarding", "handoff", "kickoff", "customer care"])
 
 
 def test_legacy_input_names_are_supported():
